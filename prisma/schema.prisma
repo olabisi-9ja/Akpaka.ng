@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  role      String   @default("customer")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  commissions  Commission[]
+  orders       Order[]
+  reviews      Review[]
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  coverImage  String
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Float
+  currency    String   @default("NGN")
+  baseLeather String?
+  soleType    String?
+  category    String
+  images      String   // comma-separated image URLs
+  videoUrl    String?
+  craftingHours String?
+  leatherSource String?
+  artisanQuote  String?
+  featured    Boolean  @default(false)
+  published   Boolean  @default(true)
+  collectionId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  collection    Collection?  @relation(fields: [collectionId], references: [id])
+  orderItems    OrderItem[]
+  reviews       Review[]
+  commissions   Commission[]
+}
+
+model Commission {
+  id            String   @id @default(cuid())
+  userId        String?
+  productId     String?
+  customDetails String   // JSON string with customization details
+  status        String   @default("inquiry") // inquiry, deposit_paid, leather_selected, cutting, stitching, finishing, quality_check, dispatched, delivered
+  depositPaid   Boolean  @default(false)
+  depositAmount Float?
+  totalAmount   Float?
+  customerName  String
+  customerEmail String
+  customerPhone String
+  measurements  String?  // JSON string
+  leatherPreference String?
+  solePreference String?
+  specialInstructions String?
+  progressPercent Int    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User?      @relation(fields: [userId], references: [id])
+  product     Product?   @relation(fields: [productId], references: [id])
+  steps       CommissionStep[]
+  media       CommissionMedia[]
+}
+
+model CommissionStep {
+  id           String   @id @default(cuid())
+  commissionId String
+  stepName     String
+  stepOrder    Int
+  completed    Boolean  @default(false)
+  completedAt  DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  commission Commission @relation(fields: [commissionId], references: [id])
+}
+
+model CommissionMedia {
+  id           String   @id @default(cuid())
+  commissionId String
+  imageUrl     String?
+  videoUrl     String?
+  caption      String?
+  stepName     String?
+  createdAt    DateTime @default(now())
+
+  commission Commission @relation(fields: [commissionId], references: [id])
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  userId      String?
+  totalAmount Float
+  status      String   @default("pending") // pending, confirmed, processing, shipped, delivered
+  customerName  String
+  customerEmail String
+  customerPhone String
+  shippingAddress String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User?      @relation(fields: [userId], references: [id])
+  items   OrderItem[]
+  payment Payment?
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int    @default(1)
+  priceEach Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id         String @id @default(cuid())
+  orderId    String @unique
+  amount     Float
+  method     String // stripe, paystack, bank_transfer
+  status     String @default("pending") // pending, completed, failed, refunded
+  reference  String?
+  createdAt  DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String?
+  productId String
+  rating    Int
+  comment   String
+  authorName String
+  createdAt DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id])
+  product Product  @relation(fields: [productId], references: [id])
+}
+
+model JournalPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  coverImage  String
+  category    String   // press, blog, craft, behind-the-scenes
+  published   Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Masterclass {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  coverImage  String
+  price       Float
+  currency    String   @default("NGN")
+  duration    String
+  level       String   // beginner, intermediate, advanced
+  lessons     Int
+  enrolled    Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
