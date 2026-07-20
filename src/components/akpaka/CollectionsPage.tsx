@@ -15,6 +15,9 @@ interface Product {
   images: string;
   category: string;
   featured: boolean;
+  productType: string;
+  stockStatus: string;
+  stockQuantity: number;
   baseLeather: string | null;
   soleType: string | null;
   craftingHours: string | null;
@@ -35,6 +38,14 @@ interface Collection {
 }
 
 const categories = ['All', 'Oxford', 'Loafer', 'Boot', 'Wedding'];
+
+const stockBadges: Record<string, { label: string; cls: string }> = {
+  'in-stock': { label: 'In Stock', cls: 'bg-green-100 text-green-800' },
+  'low-stock': { label: 'Few Left', cls: 'bg-amber-100 text-amber-800' },
+  'made-to-order': { label: 'Made to Order', cls: 'bg-blue-100 text-blue-800' },
+  'bespoke-only': { label: 'Bespoke', cls: 'bg-purple-100 text-purple-800' },
+  'waitlist': { label: 'Waitlist', cls: 'bg-red-100 text-red-800' },
+};
 
 export function CollectionsPage() {
   const { selectProduct, startCommission } = useAppStore();
@@ -163,8 +174,13 @@ export function CollectionsPage() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/20 transition-colors duration-300" />
+                  <div className="absolute top-3 left-3">
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${(stockBadges[product.stockStatus] || stockBadges['made-to-order']).cls}`}>
+                      {(stockBadges[product.stockStatus] || stockBadges['made-to-order']).label}
+                    </span>
+                  </div>
                   <div className="absolute top-3 right-3">
-                    <span className="bg-gold text-charcoal text-xs font-semibold px-2 py-1 rounded">
+                    <span className="bg-gold/90 text-charcoal text-[9px] font-semibold px-2 py-0.5 rounded-full">
                       {product.category}
                     </span>
                   </div>

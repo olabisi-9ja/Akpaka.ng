@@ -113,9 +113,9 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Akpaka Shoe Enterprise. All rights reserved.
           </p>
           <div className="flex gap-6 text-xs text-white/40">
-            <span className="hover:text-white/60 cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="hover:text-white/60 cursor-pointer transition-colors">Terms of Service</span>
-            <span className="hover:text-white/60 cursor-pointer transition-colors">Shipping Policy</span>
+            <button onClick={() => setView('policies')} className="hover:text-white/60 transition-colors">Returns & Policies</button>
+            <button onClick={() => setView('policies')} className="hover:text-white/60 transition-colors">Sizing Guide</button>
+            <button onClick={() => setView('policies')} className="hover:text-white/60 transition-colors">Shipping</button>
           </div>
         </div>
       </div>

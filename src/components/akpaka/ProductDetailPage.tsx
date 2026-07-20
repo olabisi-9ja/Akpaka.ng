@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Clock, MapPin, MessageSquare, Heart, Share2, ChevronRight, Gem } from 'lucide-react';
+import { Star, Clock, MapPin, ChevronRight, Gem, ShieldCheck, FileText, Wrench, BadgeCheck, Users } from 'lucide-react';
 
 interface Review {
   id: string;
   rating: number;
   comment: string;
   authorName: string;
-  createdAt: string;
+  verified: boolean;
+  source: string;
 }
 
 interface Product {
@@ -22,6 +23,9 @@ interface Product {
   price: number;
   images: string;
   category: string;
+  productType: string;
+  stockStatus: string;
+  stockQuantity: number;
   baseLeather: string | null;
   soleType: string | null;
   craftingHours: string | null;
@@ -31,11 +35,23 @@ interface Product {
   reviews: Review[];
 }
 
+const stockLabels: Record<string, { label: string; color: string }> = {
+  'in-stock': { label: 'In Stock', color: 'bg-green-100 text-green-800' },
+  'low-stock': { label: 'Only a Few Remaining', color: 'bg-amber-100 text-amber-800' },
+  'made-to-order': { label: 'Made to Order', color: 'bg-blue-100 text-blue-800' },
+  'bespoke-only': { label: 'Bespoke Commission Only', color: 'bg-purple-100 text-purple-800' },
+  'waitlist': { label: 'Join the Waitlist', color: 'bg-red-100 text-red-800' },
+};
+
 export function ProductDetailPage() {
-  const { selectedProductId, setView, selectProduct, startCommission, addToCart } = useAppStore();
+  const { selectedProductId, setView, startCommission, addToCart, trackEvent } = useAppStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'story' | 'materials' | 'reviews'>('story');
+  const [activeTab, setActiveTab] = useState<'story' | 'materials' | 'reviews' | 'care'>('story');
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistName, setWaitlistName] = useState('');
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const sizes = ['38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48'];
 
@@ -50,7 +66,10 @@ export function ProductDetailPage() {
   if (!product) {
     return (
       <div className="bg-cream pt-32 pb-20 min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading product details...</p>
+        <div className="animate-pulse space-y-4 text-center">
+          <div className="w-24 h-24 bg-muted rounded-full mx-auto" />
+          <p className="text-muted-foreground text-sm">Loading details&hellip;</p>
+        </div>
       </div>
     );
   }
@@ -60,153 +79,256 @@ export function ProductDetailPage() {
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
+  const stockInfo = stockLabels[product.stockStatus] || stockLabels['made-to-order'];
+  const isBespokeOnly = product.productType === 'bespoke-only';
+  const isWaitlist = product.stockStatus === 'waitlist';
+  const isReadyToWear = product.productType === 'ready-to-wear';
+
+  // Product structured data
+  const productJsonLd = {
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      description: product.description,
+      image: product.images.split(',')[0],
+      brand: { "@type": "Brand", name: "AkpakaNG" },
+      offers: {
+        "@type": "Offer",
+        price: product.price,
+        priceCurrency: "NGN",
+        availability: product.stockStatus === 'in-stock' ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+        seller: { "@type": "Organization", name: "AkpakaNG" },
+      },
+      aggregateRating: reviews.length > 0 ? {
+        "@type": "AggregateRating",
+        ratingValue: avgRating,
+        reviewCount: reviews.length,
+      } : undefined,
+    }),
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.images.split(',')[0],
+      size: selectedSize || undefined,
+      type: isReadyToWear ? 'ready-to-wear' : 'bespoke',
+      leather: product.baseLeather || undefined,
+      sole: product.soleType || undefined,
+    });
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleWaitlist = async () => {
+    try {
+      await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, email: waitlistEmail, name: waitlistName }),
+      });
+      setWaitlistSubmitted(true);
+      trackEvent('join_waitlist', { productId: product.id });
+    } catch { /* silent */ }
+  };
+
   return (
     <div className="bg-cream pt-24 sm:pt-32 pb-20">
+      <script type="application/ld+json" dangerouslySetInnerHTML={productJsonLd} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-10">
           <button onClick={() => setView('home')} className="hover:text-gold transition-colors">Home</button>
           <ChevronRight className="w-3 h-3" />
           <button onClick={() => setView('collections')} className="hover:text-gold transition-colors">Collections</button>
           <ChevronRight className="w-3 h-3" />
           <span className="text-charcoal">{product.name}</span>
-        </div>
+        </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-          {/* Product Images */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {/* Product Images — editorial whitespace */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
             <div className="aspect-[4/5] rounded-lg overflow-hidden bg-muted mb-4">
               <img
                 src={product.images.split(',')[0]}
                 alt={product.name}
+                width={800}
+                height={1000}
+                loading="eager"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3">
               {product.images.split(',').map((img, i) => (
                 <div key={i} className="aspect-square rounded-md overflow-hidden bg-muted cursor-pointer hover:ring-2 ring-gold transition-all">
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" width={200} height={200} loading="lazy" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Product Info */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col"
-          >
+          {/* Product Info — restrained, spacious layout */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="flex flex-col">
             {product.collection && (
-              <p className="text-gold text-sm tracking-widest uppercase mb-2">{product.collection.name}</p>
+              <p className="text-gold text-xs tracking-[0.3em] uppercase mb-3">{product.collection.name}</p>
             )}
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal mb-2">
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal mb-4">
               {product.name}
             </h1>
 
+            {/* Stock Status Badge */}
+            <div className="mb-4">
+              <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-medium ${stockInfo.color}`}>
+                {isBespokeOnly && <BadgeCheck className="w-3 h-3" />}
+                {stockInfo.label}
+                {product.stockStatus === 'low-stock' && ` — ${product.stockQuantity} pairs`}
+                {product.stockStatus === 'in-stock' && ` — ${product.stockQuantity} pairs available`}
+              </span>
+            </div>
+
             {/* Rating */}
             {avgRating && (
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.round(parseFloat(avgRating)) ? 'fill-gold text-gold' : 'text-muted'
-                      }`}
-                    />
+                    <Star key={i} className={`w-4 h-4 ${i < Math.round(parseFloat(avgRating)) ? 'fill-gold text-gold' : 'text-muted'}`} />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">{avgRating} ({reviews.length} reviews)</span>
+                <span className="text-sm text-muted-foreground">{avgRating} ({reviews.length} verified reviews)</span>
               </div>
             )}
 
-            {/* Price */}
-            <p className="text-3xl font-serif font-bold text-gold mb-6">
-              ₦{product.price.toLocaleString()}
-            </p>
+            {/* Price with reassurance */}
+            <div className="mb-8">
+              <p className="text-3xl font-serif font-bold text-charcoal">
+                ₦{product.price.toLocaleString()}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isReadyToWear ? 'Free shipping within Nigeria' : '30% deposit secures your commission. Balance upon completion.'}
+              </p>
+            </div>
 
-            <p className="text-muted-foreground leading-relaxed mb-6">{product.description}</p>
+            <p className="text-muted-foreground leading-[1.8] mb-8">{product.description}</p>
 
-            {/* Quick Specs */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            {/* Quick Specs — editorial spacing */}
+            <div className="grid grid-cols-2 gap-3 mb-8">
               {product.baseLeather && (
-                <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
                   <Gem className="w-4 h-4 text-gold flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">{product.baseLeather}</span>
                 </div>
               )}
               {product.craftingHours && (
-                <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
                   <Clock className="w-4 h-4 text-gold flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">{product.craftingHours}</span>
                 </div>
               )}
               {product.leatherSource && (
-                <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
+                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
                   <MapPin className="w-4 h-4 text-gold flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">{product.leatherSource}</span>
                 </div>
               )}
               {product.soleType && (
-                <div className="flex items-center gap-2 p-3 bg-white rounded-lg">
-                  <svg className="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 0 0-1.022-.547l-2.387-.477a6 6 0 0 0-3.86.517l-.318.158a6 6 0 0 1-3.86.517L6.05 15.21a2 2 0 0 0-1.806.547M8 4h8l-1 1v5.172a2 2 0 0 0 .586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 0 0 9 10.172V5L8 4z" />
-                  </svg>
+                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
+                  <Wrench className="w-4 h-4 text-gold flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">{product.soleType}</span>
                 </div>
               )}
             </div>
 
-            {/* Size Selection */}
-            <div className="mb-6">
-              <p className="text-sm font-semibold text-charcoal mb-3">Select Size (EU)</p>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`w-11 h-11 text-sm rounded-lg border-2 transition-all flex items-center justify-center ${
-                      selectedSize === size
-                        ? 'border-gold bg-gold/10 text-charcoal font-semibold'
-                        : 'border-border text-muted-foreground hover:border-gold/50'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {/* Trust Signals */}
+            <div className="grid grid-cols-3 gap-3 mb-8 p-4 bg-white rounded-lg border border-gold/10">
+              <div className="text-center">
+                <ShieldCheck className="w-5 h-5 text-gold mx-auto mb-1" />
+                <p className="text-[10px] text-muted-foreground leading-tight">Authenticity<br />Certificate</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Don&apos;t know your size? <button className="text-gold underline">Download our sizing guide</button>
-              </p>
+              <div className="text-center">
+                <Wrench className="w-5 h-5 text-gold mx-auto mb-1" />
+                <p className="text-[10px] text-muted-foreground leading-tight">Lifetime<br />Resoling</p>
+              </div>
+              <div className="text-center">
+                <FileText className="w-5 h-5 text-gold mx-auto mb-1" />
+                <p className="text-[10px] text-muted-foreground leading-tight">14-Day<br />Returns</p>
+              </div>
             </div>
 
-            {/* Actions */}
+            {/* Size Selection */}
+            {!isBespokeOnly && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-charcoal">Select Size (EU)</p>
+                  <button className="text-xs text-gold underline">Sizing Guide</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`w-11 h-11 text-sm rounded-lg border-2 transition-all flex items-center justify-center ${
+                        selectedSize === size
+                          ? 'border-gold bg-gold/10 text-charcoal font-semibold'
+                          : 'border-border text-muted-foreground hover:border-gold/50'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Primary Actions — clearly separated purchase models */}
             <div className="space-y-3 mb-8">
-              <Button
-                onClick={() => startCommission(product.id)}
-                className="w-full bg-charcoal hover:bg-charcoal/90 text-gold font-semibold h-12 text-base"
-              >
-                Commission This Style
-              </Button>
-              <Button
-                onClick={() => {
-                  addToCart({
-                    productId: product.id,
-                    name: product.name,
-                    price: product.price,
-                    quantity: 1,
-                    image: product.images.split(',')[0],
-                    size: selectedSize || undefined,
-                  });
-                }}
-                className="w-full bg-gold hover:bg-gold-light text-charcoal font-semibold h-12 text-base"
-              >
-                Add to Collection
-              </Button>
+              {/* BESPOKE: Commission CTA */}
+              {(isBespokeOnly || product.productType === 'made-to-order') && (
+                <Button
+                  onClick={() => startCommission(product.id)}
+                  className="w-full bg-charcoal hover:bg-charcoal/90 text-gold font-semibold h-13 text-base tracking-wide"
+                >
+                  Begin Commission
+                </Button>
+              )}
+
+              {/* READY-TO-WEAR: Add to Bag */}
+              {(isReadyToWear && !isWaitlist) && (
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={!selectedSize}
+                  className="w-full bg-gold hover:bg-gold-light text-charcoal font-semibold h-13 text-base tracking-wide disabled:opacity-50"
+                >
+                  {addedToCart ? '✓ Added to Bag' : 'Add to Bag'}
+                </Button>
+              )}
+
+              {/* WAITLIST */}
+              {isWaitlist && !waitlistSubmitted && (
+                <div className="space-y-3 p-4 bg-white rounded-lg border border-border">
+                  <p className="text-sm font-semibold text-charcoal">This style is currently sold out</p>
+                  <p className="text-xs text-muted-foreground">Join the waitlist to be notified when it becomes available again.</p>
+                  <div className="flex gap-2">
+                    <Input placeholder="Your name" value={waitlistName} onChange={(e) => setWaitlistName(e.target.value)} className="flex-1 h-10 text-sm" />
+                    <Input placeholder="Email" type="email" value={waitlistEmail} onChange={(e) => setWaitlistEmail(e.target.value)} className="flex-1 h-10 text-sm" />
+                  </div>
+                  <Button onClick={handleWaitlist} disabled={!waitlistEmail || !waitlistName} className="w-full bg-charcoal text-gold h-10 disabled:opacity-50">
+                    Join Waitlist
+                  </Button>
+                </div>
+              )}
+              {isWaitlist && waitlistSubmitted && (
+                <div className="p-4 bg-green-50 rounded-lg text-center">
+                  <p className="text-sm font-semibold text-green-800">You are on the waitlist</p>
+                  <p className="text-xs text-green-600 mt-1">We will notify you when this style is available.</p>
+                </div>
+              )}
+
+              {/* Always available: WhatsApp inquiry */}
               <a
                 href={`https://wa.me/2348180474183?text=Hello%20AkpakaNG!%20I%20am%20interested%20in%20the%20${encodeURIComponent(product.name)}.`}
                 target="_blank"
@@ -219,9 +341,30 @@ export function ProductDetailPage() {
               </a>
             </div>
 
+            {/* Crafting Timeline micro-copy */}
+            <div className="bg-charcoal/5 rounded-lg p-5 mb-8 space-y-3">
+              <p className="text-xs font-semibold text-charcoal tracking-wider uppercase">What Happens Next</p>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { step: '1', label: 'Consultation' },
+                  { step: '2', label: 'Crafting' },
+                  { step: '3', label: 'Quality Check' },
+                  { step: '4', label: 'Delivery' },
+                ].map((item) => (
+                  <div key={item.step} className="text-center">
+                    <div className="w-7 h-7 bg-gold/20 text-gold rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-1">{item.step}</div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {isReadyToWear ? 'Ships within 3-5 business days. Each pair comes with a certificate of authenticity and care kit.' : 'Bespoke commissions take 3-4 weeks. You will receive progress updates at every stage via WhatsApp.'}
+              </p>
+            </div>
+
             {/* Artisan Quote */}
             {product.artisanQuote && (
-              <div className="bg-charcoal text-white p-6 rounded-lg mb-6">
+              <div className="bg-charcoal text-white p-6 rounded-lg mb-8">
                 <p className="font-serif text-lg italic text-gold-light leading-relaxed">
                   &ldquo;{product.artisanQuote}&rdquo;
                 </p>
@@ -232,14 +375,12 @@ export function ProductDetailPage() {
             {/* Tabs */}
             <div className="border-b border-border mb-6">
               <div className="flex gap-6">
-                {(['story', 'materials', 'reviews'] as const).map((tab) => (
+                {(['story', 'materials', 'reviews', 'care'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`pb-3 text-sm font-semibold capitalize transition-colors ${
-                      activeTab === tab
-                        ? 'text-charcoal border-b-2 border-gold'
-                        : 'text-muted-foreground hover:text-charcoal'
+                      activeTab === tab ? 'text-charcoal border-b-2 border-gold' : 'text-muted-foreground hover:text-charcoal'
                     }`}
                   >
                     {tab}
@@ -249,75 +390,125 @@ export function ProductDetailPage() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'story' && (
-              <div className="prose prose-sm max-w-none">
-                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-                <p className="text-muted-foreground leading-relaxed mt-4">
-                  Every Akpaka shoe begins with a conversation — understanding not just what you want to wear, 
-                  but how you want to feel. This design was born from Prince Achase&apos;s dedication to 
-                  pushing the boundaries of Nigerian luxury craftsmanship, combining time-honoured 
-                  techniques with contemporary aesthetics.
-                </p>
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {activeTab === 'story' && (
+                <motion.div key="story" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                  <p className="text-muted-foreground leading-[1.8]">{product.description}</p>
+                  <p className="text-muted-foreground leading-[1.8]">
+                    Every Akpaka shoe begins with a conversation — understanding not just what you want to wear, 
+                    but how you want to feel. This design was born from Prince Achase&apos;s dedication to 
+                    pushing the boundaries of Nigerian luxury craftsmanship, combining time-honoured 
+                    techniques with contemporary aesthetics.
+                  </p>
+                </motion.div>
+              )}
 
-            {activeTab === 'materials' && (
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-white rounded-lg">
-                  <div className="w-16 h-16 bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Gem className="w-8 h-8 text-amber-800" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-charcoal">{product.baseLeather || 'Premium Leather'}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Sourced from {product.leatherSource || 'select international tanneries'}. 
-                      Our leather is vegetable-tanned for a minimum of 6 weeks, producing a hide 
-                      of extraordinary suppleness and depth of grain.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-white rounded-lg">
-                  <div className="w-16 h-16 bg-stone-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-8 h-8 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 0 0-1.022-.547l-2.387-.477a6 6 0 0 0-3.86.517l-.318.158a6 6 0 0 1-3.86.517L6.05 15.21a2 2 0 0 0-1.806.547M8 4h8l-1 1v5.172a2 2 0 0 0 .586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 0 0 9 10.172V5L8 4z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-charcoal">{product.soleType || 'Premium Sole Construction'}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Our soles are built to last decades. Goodyear welt construction allows for 
-                      easy resoling, while natural leather provides unmatched breathability and 
-                      a refined aesthetic.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'reviews' && (
-              <div className="space-y-4">
-                {reviews.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No reviews yet. Be the first to share your experience.</p>
-                ) : (
-                  reviews.map((review) => (
-                    <div key={review.id} className="p-4 bg-white rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-gold text-gold' : 'text-muted'}`} />
-                          ))}
-                        </div>
-                        <span className="font-semibold text-sm text-charcoal">{review.authorName}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{review.comment}</p>
+              {activeTab === 'materials' && (
+                <motion.div key="materials" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg">
+                    <div className="w-14 h-14 bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Gem className="w-7 h-7 text-amber-800" />
                     </div>
-                  ))
-                )}
-              </div>
-            )}
+                    <div>
+                      <h4 className="font-semibold text-charcoal">{product.baseLeather || 'Premium Leather'}</h4>
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                        Sourced from {product.leatherSource || 'select international tanneries'}. 
+                        Our leather is vegetable-tanned for a minimum of 6 weeks, producing a hide 
+                        of extraordinary suppleness and depth of grain.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg">
+                    <div className="w-14 h-14 bg-stone-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Wrench className="w-7 h-7 text-stone-700" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-charcoal">{product.soleType || 'Premium Sole Construction'}</h4>
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                        Our soles are built to last decades. Goodyear welt construction allows for 
+                        easy resoling, while natural leather provides unmatched breathability and 
+                        a refined aesthetic.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <motion.div key="reviews" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                  {reviews.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No reviews yet. Be the first to share your experience.</p>
+                  ) : (
+                    reviews.map((review) => (
+                      <div key={review.id} className="p-4 bg-white rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-gold text-gold' : 'text-muted'}`} />
+                            ))}
+                          </div>
+                          <span className="font-semibold text-sm text-charcoal">{review.authorName}</span>
+                          {review.verified && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+                              <BadgeCheck className="w-3 h-3" /> Verified
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
+                      </div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'care' && (
+                <motion.div key="care" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
+                  <div>
+                    <h4 className="font-serif text-base font-semibold text-charcoal mb-2">After-Sales Care</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Every Akpaka shoe comes with a lifetime resoling guarantee. Our Goodyear welt 
+                      construction means your shoes can be resoled indefinitely, preserving the upper 
+                      while refreshing the foundation. Resoling service is available at our Port Harcourt 
+                      atelier or by post.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-serif text-base font-semibold text-charcoal mb-2">Returns Policy</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Ready-to-wear shoes may be returned within 14 days of delivery in unworn condition 
+                      with original packaging. Bespoke commissions are non-refundable once production has 
+                      begun, but we offer complimentary adjustments to ensure perfect fit.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-serif text-base font-semibold text-charcoal mb-2">Sizing Guarantee</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Not sure about your size? We provide a complimentary sizing consultation via WhatsApp 
+                      video call. If your shoes do not fit perfectly, we offer one free size exchange on 
+                      ready-to-wear pairs within 14 days.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </div>
     </div>
+  );
+}
+
+function Input({ placeholder, value, onChange, className, type, disabled }: {
+  placeholder: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; className?: string; type?: string; disabled?: boolean;
+}) {
+  return (
+    <input
+      type={type || 'text'}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className || ''}`}
+    />
   );
 }

@@ -12,13 +12,14 @@ model User {
   email     String   @unique
   name      String?
   phone     String?
-  role      String   @default("customer")
+  role      String   @default("customer") // customer, admin, artisan, manager
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   commissions  Commission[]
   orders       Order[]
   reviews      Review[]
+  auditLogs    AuditLog[]
 }
 
 model Collection {
@@ -35,30 +36,34 @@ model Collection {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String
-  price       Float
-  currency    String   @default("NGN")
-  baseLeather String?
-  soleType    String?
-  category    String
-  images      String   // comma-separated image URLs
-  videoUrl    String?
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String
+  price         Float
+  currency      String   @default("NGN")
+  baseLeather   String?
+  soleType      String?
+  category      String   // oxford, loafer, boot, wedding
+  productType   String   @default("made-to-order") // ready-to-wear, made-to-order, bespoke-only
+  stockStatus   String   @default("made-to-order") // in-stock, low-stock, made-to-order, bespoke-only, waitlist
+  stockQuantity Int      @default(0)
+  images        String   // comma-separated image URLs
+  videoUrl      String?
   craftingHours String?
   leatherSource String?
   artisanQuote  String?
-  featured    Boolean  @default(false)
-  published   Boolean  @default(true)
-  collectionId String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  featured      Boolean  @default(false)
+  published     Boolean  @default(true)
+  collectionId  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   collection    Collection?  @relation(fields: [collectionId], references: [id])
   orderItems    OrderItem[]
   reviews       Review[]
   commissions   Commission[]
+  waitlist      WaitlistEntry[]
 }
 
 model Commission {
@@ -76,6 +81,7 @@ model Commission {
   measurements  String?  // JSON string
   leatherPreference String?
   solePreference String?
+  patinaPreference String?
   specialInstructions String?
   progressPercent Int    @default(0)
   createdAt     DateTime @default(now())
@@ -153,13 +159,15 @@ model Payment {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  userId    String?
-  productId String
-  rating    Int
-  comment   String
+  id         String   @id @default(cuid())
+  userId     String?
+  productId  String
+  rating     Int
+  comment    String
   authorName String
-  createdAt DateTime @default(now())
+  verified   Boolean  @default(false)
+  source     String   @default("website") // website, whatsapp, instagram
+  createdAt  DateTime @default(now())
 
   user    User?    @relation(fields: [userId], references: [id])
   product Product  @relation(fields: [productId], references: [id])
@@ -194,4 +202,29 @@ model Masterclass {
   published   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  productId String
+  email     String
+  name      String
+  phone     String?
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // e.g. "commission_status_change", "order_placed", "product_updated"
+  entity    String   // e.g. "commission", "order", "product"
+  entityId  String?
+  details   String?  // JSON string with before/after data
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }

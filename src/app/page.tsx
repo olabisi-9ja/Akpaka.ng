@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, View } from '@/store/useAppStore';
 import { Navbar } from '@/components/akpaka/Navbar';
@@ -16,6 +16,8 @@ import { JournalPage } from '@/components/akpaka/JournalPage';
 import { MasterclassPage } from '@/components/akpaka/MasterclassPage';
 import { ContactPage } from '@/components/akpaka/ContactPage';
 import { CartDrawer } from '@/components/akpaka/CartDrawer';
+import { CheckoutPage } from '@/components/akpaka/CheckoutPage';
+import { PoliciesPage } from '@/components/akpaka/PoliciesPage';
 
 const viewComponents: Record<View, React.ComponentType> = {
   home: HomePage,
@@ -29,7 +31,8 @@ const viewComponents: Record<View, React.ComponentType> = {
   masterclass: MasterclassPage,
   contact: ContactPage,
   cart: CollectionsPage,
-  checkout: CollectionsPage,
+  checkout: CheckoutPage,
+  policies: PoliciesPage,
 };
 
 export default function AkpakaStore() {
