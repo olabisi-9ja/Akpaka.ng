@@ -35,8 +35,8 @@ export function HomePage() {
       fetch('/api/products/collections').then(r => r.json()),
       fetch('/api/products?featured=true').then(r => r.json()),
     ]).then(([cols, prods]) => {
-      setCollections(cols);
-      setFeaturedProducts(prods);
+      setCollections(Array.isArray(cols) ? cols : []);
+      setFeaturedProducts(Array.isArray(prods) ? prods : []);
     });
   }, []);
 

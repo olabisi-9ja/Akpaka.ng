@@ -36,7 +36,7 @@ export function JournalPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   useEffect(() => {
-    fetch('/api/journal').then(r => r.json()).then(setPosts);
+    fetch('/api/journal').then(r => r.json()).then(data => setPosts(Array.isArray(data) ? data : []));
   }, []);
 
   const filteredPosts = activeCategory === 'all'

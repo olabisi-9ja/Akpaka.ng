@@ -32,7 +32,7 @@ export function MasterclassPage() {
   const [selectedCourse, setSelectedCourse] = useState<Masterclass | null>(null);
 
   useEffect(() => {
-    fetch('/api/masterclass').then(r => r.json()).then(setCourses);
+    fetch('/api/masterclass').then(r => r.json()).then(data => setCourses(Array.isArray(data) ? data : []));
   }, []);
 
   return (

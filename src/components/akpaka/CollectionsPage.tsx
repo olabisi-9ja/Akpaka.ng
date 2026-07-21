@@ -60,8 +60,8 @@ export function CollectionsPage() {
       fetch('/api/products/collections').then(r => r.json()),
       fetch('/api/products').then(r => r.json()),
     ]).then(([cols, prods]) => {
-      setCollections(cols);
-      setProducts(prods);
+      setCollections(Array.isArray(cols) ? cols : []);
+      setProducts(Array.isArray(prods) ? prods : []);
     });
   }, []);
 

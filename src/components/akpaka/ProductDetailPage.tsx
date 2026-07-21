@@ -59,7 +59,7 @@ export function ProductDetailPage() {
     if (selectedProductId) {
       fetch(`/api/products?id=${selectedProductId}`)
         .then(r => r.json())
-        .then(setProduct);
+        .then(data => setProduct(data.error ? null : data));
     }
   }, [selectedProductId]);
 

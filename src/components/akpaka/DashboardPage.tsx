@@ -34,7 +34,7 @@ export function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'commissions' | 'orders'>('commissions');
 
   useEffect(() => {
-    fetch('/api/commissions').then(r => r.json()).then(setCommissions);
+    fetch('/api/commissions').then(r => r.json()).then(data => setCommissions(Array.isArray(data) ? data : []));
   }, []);
 
   const statusColors: Record<string, string> = {
