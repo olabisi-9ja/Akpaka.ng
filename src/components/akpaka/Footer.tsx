@@ -27,7 +27,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <h3 className="font-serif text-2xl font-bold text-gold tracking-wider mb-4">AKPAKA.NG</h3>
+            <img src="/logo.png" alt="AkpakaNG Logo" className="h-16 w-auto mb-6 drop-shadow-md object-contain" />
             <p className="text-sm text-white/60 leading-relaxed mb-4">
               Where leather meets excellence. Handcrafted luxury shoes from Port Harcourt, Nigeria.
               Every pair tells a story of dedication, precision, and unapologetic excellence.

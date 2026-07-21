@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "AkpakaNG — Where Leather Meets Excellence | Bespoke Luxury Shoes Nigeria",
   description: "Handcrafted luxury shoes from Port Harcourt, Nigeria. Bespoke Oxfords, loafers, boots, and wedding shoes crafted by master artisan Prince Sunday Achase. Made-to-order with Italian calfskin and Goodyear welt construction.",
   keywords: ["AkpakaNG", "bespoke shoes", "luxury footwear", "Nigeria", "handcrafted", "leather shoes", "Port Harcourt", "Goodyear welt", "patina", "Oxford", "loafer", "Chelsea boot"],
-  icons: { icon: "/logo.svg" },
+  icons: { icon: "/logo.png" },
   openGraph: {
     title: "AkpakaNG — Where Leather Meets Excellence",
     description: "Handcrafted luxury shoes from Port Harcourt, Nigeria. Bespoke Oxfords, loafers, boots, and wedding shoes by master artisan Prince Sunday Achase.",
@@ -56,7 +56,7 @@ export default function RootLayout({
           name: "Akpaka Shoe Enterprise",
           alternateName: "AkpakaNG",
           url: "https://akpaka.ng",
-          logo: "https://akpaka.ng/logo.svg",
+          logo: "https://akpaka.ng/logo.png",
           description: "Bespoke luxury shoemaking brand based in Port Harcourt, Nigeria.",
           founder: {
             "@type": "Person",

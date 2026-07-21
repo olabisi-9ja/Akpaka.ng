@@ -43,25 +43,18 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <button
+            <motion.button
               onClick={() => setView('home')}
-              className="flex items-center gap-2 group"
+              className="flex items-center group relative overflow-hidden rounded-md"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <span
-                className={`font-serif text-2xl sm:text-3xl font-bold tracking-wider transition-colors duration-300 ${
-                  scrolled ? 'text-gold' : 'text-white'
-                } group-hover:text-gold-light`}
-              >
-                AKPAKA
-              </span>
-              <span
-                className={`hidden sm:inline text-xs tracking-[0.3em] uppercase mt-2 transition-colors duration-300 ${
-                  scrolled ? 'text-gold-light/80' : 'text-white/70'
-                }`}
-              >
-                .NG
-              </span>
-            </button>
+              <img 
+                src="/logo.png" 
+                alt="AkpakaNG Logo" 
+                className={`h-12 sm:h-14 w-auto object-contain transition-all duration-300 ${scrolled ? 'brightness-110 drop-shadow-md' : 'drop-shadow-lg'}`}
+              />
+            </motion.button>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
