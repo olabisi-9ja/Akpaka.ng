@@ -28,11 +28,14 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const isHome = currentView === 'home';
+  const isSolid = scrolled || !isHome;
+
   return (
     <>
       <motion.header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
+          isSolid
             ? 'bg-charcoal/95 backdrop-blur-md shadow-lg'
             : 'bg-transparent'
         }`}
@@ -52,7 +55,7 @@ export function Navbar() {
               <img 
                 src="/logo.png" 
                 alt="AkpakaNG Logo" 
-                className={`h-12 sm:h-14 w-auto object-contain transition-all duration-300 ${scrolled ? 'brightness-110 drop-shadow-md' : 'drop-shadow-lg'}`}
+                className={`h-12 sm:h-14 w-auto object-contain transition-all duration-300 ${isSolid ? 'brightness-110 drop-shadow-md' : 'drop-shadow-lg'}`}
               />
             </motion.button>
 
@@ -64,10 +67,10 @@ export function Navbar() {
                   onClick={() => setView(item.view)}
                   className={`px-3 py-2 text-sm tracking-wider uppercase transition-all duration-300 rounded-sm ${
                     currentView === item.view
-                      ? scrolled
+                      ? isSolid
                         ? 'text-gold border-b-2 border-gold'
                         : 'text-gold-light border-b-2 border-gold-light'
-                      : scrolled
+                      : isSolid
                       ? 'text-white/80 hover:text-gold'
                       : 'text-white/70 hover:text-gold-light'
                   }`}
@@ -82,7 +85,7 @@ export function Navbar() {
               <button
                 onClick={toggleCart}
                 className={`relative p-2 transition-colors duration-300 ${
-                  scrolled ? 'text-white hover:text-gold' : 'text-white/80 hover:text-gold-light'
+                  isSolid ? 'text-white hover:text-gold' : 'text-white/80 hover:text-gold-light'
                 }`}
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -102,7 +105,7 @@ export function Navbar() {
                 variant="ghost"
                 size="icon"
                 className={`lg:hidden transition-colors duration-300 ${
-                  scrolled ? 'text-white hover:text-gold' : 'text-white/80 hover:text-gold-light'
+                  isSolid ? 'text-white hover:text-gold' : 'text-white/80 hover:text-gold-light'
                 }`}
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { mockCollections } from '@/lib/mockData';
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     });
     return NextResponse.json(collections);
   } catch (error) {
-    console.error('Error fetching collections:', error);
-    return NextResponse.json({ error: 'Failed to fetch collections' }, { status: 500 });
+    console.error('Error fetching collections, falling back to mock data:', error);
+    return NextResponse.json(mockCollections);
   }
 }

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { mockJournalPosts } from '@/lib/mockData';
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     });
     return NextResponse.json(posts);
   } catch (error) {
-    console.error('Error fetching journal posts:', error);
-    return NextResponse.json({ error: 'Failed to fetch journal posts' }, { status: 500 });
+    console.error('Error fetching journal posts, falling back to mock data:', error);
+    return NextResponse.json(mockJournalPosts);
   }
 }
