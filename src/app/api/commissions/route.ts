@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         customerEmail,
         customerPhone,
         productId: productId || null,
-        customDetails: customDetails ? JSON.stringify(customDetails) : null,
+        customDetails: customDetails ? JSON.stringify(customDetails) : "{}",
         leatherPreference,
         solePreference,
         specialInstructions,
