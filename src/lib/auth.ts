@@ -15,27 +15,22 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
         
-        const user = await db.user.findUnique({
-          where: { email: credentials.email }
-        });
-
-        if (!user || user.role !== "admin") {
-          const adminCount = await db.user.count({ where: { role: "admin" } });
-          if (adminCount === 0 && credentials.email === "admin@akpaka.ng" && credentials.password === "akpaka2026") {
-            const newAdmin = await db.user.create({
-              data: {
-                email: "admin@akpaka.ng",
-                name: "Admin User",
-                role: "admin",
-              }
-            });
-            return { id: newAdmin.id, name: newAdmin.name || "", email: newAdmin.email, role: newAdmin.role };
-          }
-          return null;
+        // Hardcoded fallback that bypasses database completely if it's the exact admin credentials
+        if (credentials.email === "admin@akpaka.ng" && credentials.password === "akpaka2026") {
+          return { id: "admin-1", name: "Admin User", email: "admin@akpaka.ng", role: "admin" };
         }
 
-        if (credentials.password === "akpaka2026") {
-          return { id: user.id, name: user.name || "", email: user.email, role: user.role };
+        try {
+          const user = await db.user.findUnique({
+            where: { email: credentials.email }
+          });
+
+          if (user && user.role === "admin" && credentials.password === "akpaka2026") {
+            return { id: user.id, name: user.name || "", email: user.email, role: user.role };
+          }
+        } catch (e) {
+          console.error("Database error during auth:", e);
+          // If DB fails (like SQLite on Vercel), the hardcoded check above will already have caught the default admin
         }
 
         return null;
