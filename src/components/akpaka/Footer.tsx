@@ -132,7 +132,8 @@ export function Footer() {
             <a href="/admin" className="hover:text-white/60 transition-colors">Admin Portal</a>
           </div>
         </div>
-      </div>
         </div>
       </div>
     </footer>
+  );
+}
