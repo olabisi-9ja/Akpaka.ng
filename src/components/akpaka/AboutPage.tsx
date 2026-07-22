@@ -30,7 +30,7 @@ export function AboutPage() {
       {/* Hero */}
       <section className="relative h-[60vh] sm:h-[70vh] overflow-hidden mb-20">
         <img
-          src="/images/editorial/media__1784681124579.jpg"
+          src="/images/editorial/founder-prince-achase.jpg"
           alt="Prince Sunday Achase"
           className="w-full h-full object-cover object-top"
         />
@@ -148,9 +148,9 @@ export function AboutPage() {
                 <div className="flex-1 hidden sm:block" />
 
                 {/* Mobile layout */}
-                <div className="sm:hidden flex-1 pl-4">
+                <div className="sm:hidden flex-1 pl-4 break-words">
                   <h3 className="font-serif text-lg font-semibold text-gold mb-1">{item.title}</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">{item.description}</p>
+                  <p className="text-white/60 text-sm leading-relaxed hyphens-auto">{item.description}</p>
                 </div>
               </motion.div>
             ))}

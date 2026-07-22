@@ -93,7 +93,7 @@ export function HomePage() {
           <img
             src="/images/editorial/media__1784681124508.jpg"
             alt="The Loafer Edit"
-            className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 flex flex-col justify-end p-10 pointer-events-none">
             <h2 className="font-serif text-3xl md:text-4xl text-charcoal font-medium mb-2">The Loafer Edit</h2>
@@ -108,7 +108,7 @@ export function HomePage() {
           <div className="relative aspect-[4/5] md:aspect-auto md:h-[80vh] overflow-hidden bg-charcoal/10">
             {/* Use the founder photos you attached — the two portrait images of Prince Achase */}
             <img
-              src="/images/editorial/media__1784681124579.jpg"
+              src="/images/editorial/founder-prince-achase.jpg"
               alt="Prince Sunday Achase — Master Shoemaker"
               className="w-full h-full object-cover object-center"
             />

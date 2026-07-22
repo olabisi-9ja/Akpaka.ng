@@ -47,11 +47,9 @@ export function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <img 
-                src="/logo.png" 
-                alt="AkpakaNG Logo" 
-                className={`h-12 sm:h-14 w-auto object-contain transition-all duration-300`}
-              />
+              <span className="font-serif text-2xl tracking-[0.1em] text-charcoal">
+                Akpaka.NG
+              </span>
             </motion.button>
 
             {/* Desktop Navigation */}

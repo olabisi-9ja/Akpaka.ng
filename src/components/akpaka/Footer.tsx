@@ -14,21 +14,26 @@ export function Footer() {
   return (
     <footer className="bg-charcoal text-white/80 mt-auto">
       {/* Back to top */}
-      <div className="flex justify-center -mt-5">
+      <div className="flex justify-center -mt-5 relative z-10">
         <button
           onClick={scrollToTop}
-          className="w-10 h-10 bg-gold text-charcoal rounded-full flex items-center justify-center hover:bg-gold-light transition-colors"
+          className="w-10 h-10 bg-gold text-charcoal rounded-full flex items-center justify-center hover:bg-gold-light transition-colors shadow-lg"
         >
           <ArrowUp className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        {/* Cinematic Logo */}
+        <div className="flex justify-center mb-24 opacity-80 hover:opacity-100 transition-opacity">
+          <img src="/logo.png" alt="AkpakaNG Logo" className="h-32 sm:h-48 md:h-64 w-auto object-contain drop-shadow-2xl" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-t border-white/10 pt-16">
           {/* Brand */}
           <div>
-            <img src="/logo.png" alt="AkpakaNG Logo" className="h-16 w-auto mb-6 object-contain" />
-            <p className="text-sm text-white/60 leading-relaxed mb-4">
+            <h4 className="text-sm font-semibold tracking-wider uppercase text-gold/80 mb-4">Our Atelier</h4>
+            <p className="text-sm text-white/60 leading-relaxed mb-6">
               Where leather meets excellence. Handcrafted luxury shoes from Port Harcourt, Nigeria.
               Every pair tells a story of dedication, precision, and unapologetic excellence.
             </p>
