@@ -10,6 +10,7 @@ export default withAuth(
     }
   },
   {
+    secret: process.env.NEXTAUTH_SECRET || "akpaka-super-secret-development-key-2026",
     callbacks: {
       authorized: ({ token, req }) => {
         if (req.nextUrl.pathname.startsWith("/admin/login")) {

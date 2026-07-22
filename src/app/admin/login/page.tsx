@@ -28,7 +28,9 @@ export default function AdminLogin() {
       setError("Invalid credentials");
       setLoading(false);
     } else {
-      router.push("/admin");
+      // Use window.location instead of router.push to force a hard reload
+      // This prevents the UI from hanging if middleware intercepts the request
+      window.location.href = "/admin";
     }
   };
 
