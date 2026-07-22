@@ -28,13 +28,11 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://akpaka.ng",
     siteName: "AkpakaNG",
-    images: [{ url: "https://akpaka.ng/images/editorial/founder-prince-achase.jpg", width: 1200, height: 630, alt: "AkpakaNG Handcrafted Luxury Shoes" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AkpakaNG — Where Leather Meets Excellence",
     description: "Handcrafted luxury shoes from Port Harcourt, Nigeria.",
-    images: ["https://akpaka.ng/images/editorial/founder-prince-achase.jpg"],
   },
   metadataBase: new URL("https://akpaka.ng"),
   alternates: { canonical: "/" },

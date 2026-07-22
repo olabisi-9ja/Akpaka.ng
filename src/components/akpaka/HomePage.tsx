@@ -189,13 +189,13 @@ export function HomePage() {
       <section className="max-w-[1600px] mx-auto px-4 py-8 mb-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative aspect-square overflow-hidden group cursor-pointer bg-[#f4f2ef]" onClick={() => setView('craftsmanship')}>
-            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679463902.png" alt="The Oxford" className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
+            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784683705976.jpg" alt="The Oxford" className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute bottom-6 left-6 right-6">
               <p className="text-charcoal text-lg font-serif">The Oxford<br /><span className="text-sm font-sans text-charcoal/60">Patina Collection</span></p>
             </div>
           </div>
           <div className="relative aspect-square overflow-hidden group cursor-pointer bg-[#e8f0ef]" onClick={() => setView('collections')}>
-            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679471629.png" alt="The Loafer" className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
+            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784683717547.jpg" alt="The Loafer" className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute bottom-6 left-6 right-6">
               <p className="text-charcoal text-lg font-serif">The Loafer<br /><span className="text-sm font-sans text-charcoal/60">Signature Collection</span></p>
             </div>
