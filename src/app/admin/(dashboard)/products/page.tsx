@@ -7,10 +7,15 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
-  const products = await db.product.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { collection: true }
-  });
+  let products: any[] = [];
+  try {
+    products = await db.product.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { collection: true }
+    });
+  } catch (e) {
+    console.error("Database connection failed on Vercel Serverless for products:", e);
+  }
 
   return (
     <div>

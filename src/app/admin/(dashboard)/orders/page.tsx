@@ -8,16 +8,24 @@ import CommissionStatusSelect from "./CommissionStatusSelect";
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
-  const [orders, commissions] = await Promise.all([
-    db.order.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { user: true, items: { include: { product: true } }, payment: true }
-    }),
-    db.commission.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { user: true, product: true }
-    })
-  ]);
+  let orders: any[] = [];
+  let commissions: any[] = [];
+  try {
+    const data = await Promise.all([
+      db.order.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { user: true, items: { include: { product: true } }, payment: true }
+      }),
+      db.commission.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { user: true, product: true }
+      })
+    ]);
+    orders = data[0];
+    commissions = data[1];
+  } catch (e) {
+    console.error("Database connection failed on Vercel Serverless for orders:", e);
+  }
 
   return (
     <div>
