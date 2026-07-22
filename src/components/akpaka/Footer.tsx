@@ -12,22 +12,30 @@ export function Footer() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <footer className="bg-charcoal text-white/80 mt-auto">
-      {/* Back to top */}
-      <div className="flex justify-center -mt-5 relative z-10">
-        <button
-          onClick={scrollToTop}
-          className="w-10 h-10 bg-gold text-charcoal rounded-full flex items-center justify-center hover:bg-gold-light transition-colors shadow-lg"
-        >
-          <ArrowUp className="w-4 h-4" />
-        </button>
+    <footer className="relative bg-charcoal text-white/80 mt-auto overflow-hidden">
+      {/* Cinematic Logo Background */}
+      <div 
+        className="absolute inset-0 z-0 opacity-[0.04] pointer-events-none flex items-center justify-center"
+      >
+        <img 
+          src="/logo.png" 
+          alt="AkpakaNG Background" 
+          className="w-[120%] h-auto max-w-none md:w-full object-cover mix-blend-overlay"
+        />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        {/* Cinematic Logo */}
-        <div className="flex justify-center mb-24 opacity-80 hover:opacity-100 transition-opacity">
-          <img src="/logo.png" alt="AkpakaNG Logo" className="h-32 sm:h-48 md:h-64 w-auto object-contain drop-shadow-2xl" />
+      <div className="relative z-10">
+        {/* Back to top */}
+        <div className="flex justify-center -mt-5">
+          <button
+            onClick={scrollToTop}
+            className="w-10 h-10 bg-gold text-charcoal rounded-full flex items-center justify-center hover:bg-gold-light transition-colors shadow-lg"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </button>
         </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-t border-white/10 pt-16">
           {/* Brand */}
@@ -125,6 +133,6 @@ export function Footer() {
           </div>
         </div>
       </div>
+        </div>
+      </div>
     </footer>
-  );
-}

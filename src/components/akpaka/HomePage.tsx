@@ -102,37 +102,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 4. MEET THE FOUNDER - uses actual founder photos you uploaded */}
-      <section className="bg-[#f4f2ef] border-t border-charcoal/5">
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative aspect-[4/5] md:aspect-auto md:h-[80vh] overflow-hidden bg-charcoal/10">
-            {/* Use the founder photos you attached — the two portrait images of Prince Achase */}
-            <img
-              src="/images/editorial/founder-prince-achase.jpg"
-              alt="Prince Sunday Achase — Master Shoemaker"
-              className="w-full h-full object-cover object-center"
-            />
-          </div>
-          <div className="flex flex-col justify-center items-start px-10 py-16 md:px-16 md:py-24">
-            <span className="text-xs uppercase tracking-[0.2em] text-charcoal/50 mb-4">The Artisan</span>
-            <h2 className="font-serif text-3xl md:text-5xl text-charcoal font-medium mb-6 leading-tight">
-              Prince Sunday Achase.
-            </h2>
-            <p className="text-charcoal/70 mb-8 max-w-md leading-relaxed text-sm">
-              From a university dropout in Port Harcourt to Nigeria's most celebrated bespoke shoemaker. Every pair tells his story.
-            </p>
-            <Button
-              onClick={() => setView('about')}
-              variant="outline"
-              className="border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-6 rounded-none text-xs uppercase tracking-widest transition-colors"
-            >
-              Read his story
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. AKPAKA COLLECTION GRID */}
+      {/* 4. AKPAKA COLLECTION GRID */}
       <section className="max-w-[1600px] mx-auto px-4 py-16">
         <div className="flex items-baseline gap-4 mb-10">
           <h2 className="font-serif text-3xl md:text-4xl text-charcoal font-medium uppercase">Akpaka Collection</h2>
@@ -170,6 +140,36 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* 5. MEET THE FOUNDER - uses actual founder photos you uploaded */}
+      <section className="bg-[#f4f2ef] border-t border-charcoal/5">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="relative aspect-[4/5] md:aspect-auto md:h-[80vh] overflow-hidden bg-charcoal/10">
+            {/* Use the founder photos you attached — the two portrait images of Prince Achase */}
+            <img
+              src="/images/editorial/founder-prince-achase.jpg"
+              alt="Prince Sunday Achase — Master Shoemaker"
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
+          <div className="flex flex-col justify-center items-start px-10 py-16 md:px-16 md:py-24">
+            <span className="text-xs uppercase tracking-[0.2em] text-charcoal/50 mb-4">The Artisan</span>
+            <h2 className="font-serif text-3xl md:text-5xl text-charcoal font-medium mb-6 leading-tight">
+              Prince Sunday Achase.
+            </h2>
+            <p className="text-charcoal/70 mb-8 max-w-md leading-relaxed text-sm">
+              From a university dropout in Port Harcourt to Nigeria's most celebrated bespoke shoemaker. Every pair tells his story.
+            </p>
+            <Button
+              onClick={() => setView('about')}
+              variant="outline"
+              className="border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-6 rounded-none text-xs uppercase tracking-widest transition-colors"
+            >
+              Read his story
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* 6. PROMOTIONAL BESPOKE BANNER */}
       <section className="bg-[#e8e4db] py-20 px-6 text-center">
         <span className="text-charcoal/50 text-xs tracking-[0.25em] uppercase block mb-4">Made to Order</span>
@@ -185,17 +185,17 @@ export function HomePage() {
         </Button>
       </section>
 
-      {/* 7. BOTTOM HIGHLIGHTS */}
+      {/* 6. BOTTOM HIGHLIGHTS */}
       <section className="max-w-[1600px] mx-auto px-4 py-8 mb-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative aspect-square overflow-hidden group cursor-pointer bg-[#f4f2ef]" onClick={() => setView('craftsmanship')}>
-            <img src="/images/editorial/media__1784681124466.jpg" alt="The Oxford" className="w-full h-full object-contain mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
+            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679463902.png" alt="The Oxford" className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute bottom-6 left-6 right-6">
               <p className="text-charcoal text-lg font-serif">The Oxford<br /><span className="text-sm font-sans text-charcoal/60">Patina Collection</span></p>
             </div>
           </div>
           <div className="relative aspect-square overflow-hidden group cursor-pointer bg-[#e8f0ef]" onClick={() => setView('collections')}>
-            <img src="/images/editorial/media__1784681124508.jpg" alt="The Loafer" className="w-full h-full object-contain mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
+            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679471629.png" alt="The Loafer" className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute bottom-6 left-6 right-6">
               <p className="text-charcoal text-lg font-serif">The Loafer<br /><span className="text-sm font-sans text-charcoal/60">Signature Collection</span></p>
             </div>
