@@ -121,6 +121,7 @@ export function Footer() {
             <button onClick={() => setView('policies')} className="hover:text-white/60 transition-colors">Returns & Policies</button>
             <button onClick={() => setView('policies')} className="hover:text-white/60 transition-colors">Sizing Guide</button>
             <button onClick={() => setView('policies')} className="hover:text-white/60 transition-colors">Shipping</button>
+            <a href="/admin" className="hover:text-white/60 transition-colors">Admin Portal</a>
           </div>
         </div>
       </div>
