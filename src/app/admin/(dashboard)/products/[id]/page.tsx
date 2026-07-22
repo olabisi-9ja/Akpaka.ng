@@ -7,14 +7,15 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductEditPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const isNew = params.id === "new";
+  const { id } = await params;
+  const isNew = id === "new";
   
   let product = null;
   if (!isNew) {
     product = await db.product.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
   }
 
