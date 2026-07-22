@@ -32,7 +32,7 @@ export function HomePage() {
       <section className="relative h-[90vh] min-h-[600px] overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/editorial/media__1784681124466.jpg"
+            src="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=1600&q=80"
             alt="Akpaka Handcrafted Oxfords"
             className="w-full h-full object-cover object-center"
           />

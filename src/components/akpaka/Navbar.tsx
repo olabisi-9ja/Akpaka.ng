@@ -24,7 +24,7 @@ export function Navbar() {
   }, []);
 
   const isHome = currentView === 'home';
-  const isSolid = scrolled || !isHome;
+  const isSolid = true; // Always solid for readability
 
   return (
     <>
