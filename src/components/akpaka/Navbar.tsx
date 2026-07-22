@@ -7,14 +7,9 @@ import { Button } from '@/components/ui/button';
 import { ShoppingBag, Menu, X, Search } from 'lucide-react';
 
 const navItems: { label: string; view: View }[] = [
-  { label: 'Home', view: 'home' },
   { label: 'Collections', view: 'collections' },
-  { label: 'About', view: 'about' },
-  { label: 'Craftsmanship', view: 'craftsmanship' },
-  { label: 'Commission', view: 'commission' },
-  { label: 'Journal', view: 'journal' },
-  { label: 'Academy', view: 'masterclass' },
-  { label: 'Contact', view: 'contact' },
+  { label: 'Atelier', view: 'craftsmanship' },
+  { label: 'Bespoke', view: 'commission' },
 ];
 
 export function Navbar() {
@@ -34,9 +29,9 @@ export function Navbar() {
   return (
     <>
       <motion.header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500 ${
           isSolid
-            ? 'bg-charcoal/95 backdrop-blur-md shadow-lg'
+            ? 'bg-[#FAF9F6] border-b border-charcoal/10'
             : 'bg-transparent'
         }`}
         initial={{ y: -100 }}
@@ -55,24 +50,24 @@ export function Navbar() {
               <img 
                 src="/logo.png" 
                 alt="AkpakaNG Logo" 
-                className={`h-12 sm:h-14 w-auto object-contain transition-all duration-300 ${isSolid ? 'brightness-110 drop-shadow-md' : 'drop-shadow-lg'}`}
+                className={`h-12 sm:h-14 w-auto object-contain transition-all duration-300`}
               />
             </motion.button>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-6">
               {navItems.map((item) => (
                 <button
                   key={item.view}
                   onClick={() => setView(item.view)}
-                  className={`px-3 py-2 text-sm tracking-wider uppercase transition-all duration-300 rounded-sm ${
+                  className={`py-2 text-xs tracking-[0.15em] uppercase transition-all duration-300 ${
                     currentView === item.view
                       ? isSolid
-                        ? 'text-gold border-b-2 border-gold'
-                        : 'text-gold-light border-b-2 border-gold-light'
+                        ? 'text-charcoal font-semibold border-b border-charcoal'
+                        : 'text-white font-semibold border-b border-white'
                       : isSolid
-                      ? 'text-white/80 hover:text-gold'
-                      : 'text-white/70 hover:text-gold-light'
+                      ? 'text-charcoal/70 hover:text-charcoal'
+                      : 'text-white/80 hover:text-white'
                   }`}
                 >
                   {item.label}
@@ -85,7 +80,7 @@ export function Navbar() {
               <button
                 onClick={toggleCart}
                 className={`relative p-2 transition-colors duration-300 ${
-                  isSolid ? 'text-white hover:text-gold' : 'text-white/80 hover:text-gold-light'
+                  isSolid ? 'text-charcoal hover:text-black' : 'text-white/90 hover:text-white'
                 }`}
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -93,7 +88,9 @@ export function Navbar() {
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-charcoal text-xs font-bold rounded-full flex items-center justify-center"
+                    className={`absolute -top-1 -right-1 w-5 h-5 text-[10px] font-bold rounded-full flex items-center justify-center ${
+                      isSolid ? 'bg-charcoal text-white' : 'bg-white text-charcoal'
+                    }`}
                   >
                     {cartCount}
                   </motion.span>
@@ -104,8 +101,8 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 variant="ghost"
                 size="icon"
-                className={`lg:hidden transition-colors duration-300 ${
-                  isSolid ? 'text-white hover:text-gold' : 'text-white/80 hover:text-gold-light'
+                className={`lg:hidden transition-colors duration-300 hover:bg-transparent ${
+                  isSolid ? 'text-charcoal hover:text-black' : 'text-white/90 hover:text-white'
                 }`}
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

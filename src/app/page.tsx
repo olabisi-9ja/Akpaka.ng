@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, View } from '@/store/useAppStore';
 import { Navbar } from '@/components/akpaka/Navbar';
@@ -18,6 +18,7 @@ import { ContactPage } from '@/components/akpaka/ContactPage';
 import { CartDrawer } from '@/components/akpaka/CartDrawer';
 import { CheckoutPage } from '@/components/akpaka/CheckoutPage';
 import { PoliciesPage } from '@/components/akpaka/PoliciesPage';
+import { SplashScreen } from '@/components/akpaka/SplashScreen';
 
 const viewComponents: Record<View, React.ComponentType> = {
   home: HomePage,
@@ -38,9 +39,17 @@ const viewComponents: Record<View, React.ComponentType> = {
 export default function AkpakaStore() {
   const { currentView, cartOpen } = useAppStore();
   const CurrentView = viewComponents[currentView] || HomePage;
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentView]);
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      <AnimatePresence>
+        {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      </AnimatePresence>
       <Navbar />
       <main className="flex-1">
         <AnimatePresence mode="wait">

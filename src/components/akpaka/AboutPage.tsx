@@ -30,9 +30,9 @@ export function AboutPage() {
       {/* Hero */}
       <section className="relative h-[60vh] sm:h-[70vh] overflow-hidden mb-20">
         <img
-          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&q=80"
+          src="/images/editorial/media__1784681124579.jpg"
           alt="Prince Sunday Achase"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 sm:p-16">
@@ -92,7 +92,7 @@ export function AboutPage() {
           >
             <div className="aspect-[3/4] rounded-lg overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
+                src="/images/editorial/media__1784681124592.jpg"
                 alt="Prince Achase in his workshop"
                 className="w-full h-full object-cover"
               />

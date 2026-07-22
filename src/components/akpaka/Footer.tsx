@@ -17,7 +17,7 @@ export function Footer() {
       <div className="flex justify-center -mt-5">
         <button
           onClick={scrollToTop}
-          className="w-10 h-10 bg-gold text-charcoal rounded-full flex items-center justify-center hover:bg-gold-light transition-colors shadow-lg"
+          className="w-10 h-10 bg-gold text-charcoal rounded-full flex items-center justify-center hover:bg-gold-light transition-colors"
         >
           <ArrowUp className="w-4 h-4" />
         </button>
@@ -27,7 +27,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <img src="/logo.png" alt="AkpakaNG Logo" className="h-16 w-auto mb-6 drop-shadow-md object-contain" />
+            <img src="/logo.png" alt="AkpakaNG Logo" className="h-16 w-auto mb-6 object-contain" />
             <p className="text-sm text-white/60 leading-relaxed mb-4">
               Where leather meets excellence. Handcrafted luxury shoes from Port Harcourt, Nigeria.
               Every pair tells a story of dedication, precision, and unapologetic excellence.

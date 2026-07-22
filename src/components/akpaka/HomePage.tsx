@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Star, Sparkles, Gem, Clock, Award, BadgeCheck, ShieldCheck, Wrench, FileText } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 
 interface Product {
   id: string; name: string; slug: string; description: string; price: number; images: string;
@@ -13,300 +13,178 @@ interface Product {
   reviews: { rating: number }[];
 }
 
-interface Collection {
-  id: string; name: string; slug: string; description: string; coverImage: string; products: Product[];
-}
-
-const stockBadges: Record<string, { label: string; cls: string }> = {
-  'in-stock': { label: 'Available', cls: 'bg-green-100 text-green-800' },
-  'low-stock': { label: 'Few Remaining', cls: 'bg-amber-100 text-amber-800' },
-  'made-to-order': { label: 'Made to Order', cls: 'bg-blue-100 text-blue-800' },
-  'bespoke-only': { label: 'Bespoke', cls: 'bg-purple-100 text-purple-800' },
-  'waitlist': { label: 'Waitlist', cls: 'bg-red-100 text-red-800' },
-};
-
 export function HomePage() {
   const { setView, selectProduct, startCommission } = useAppStore();
-  const [collections, setCollections] = useState<Collection[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/products/collections').then(r => r.json()),
-      fetch('/api/products?featured=true').then(r => r.json()),
-    ]).then(([cols, prods]) => {
-      setCollections(Array.isArray(cols) ? cols : []);
-      setFeaturedProducts(Array.isArray(prods) ? prods : []);
-    });
+    fetch('/api/products?featured=true')
+      .then(r => r.json())
+      .then(prods => {
+        setFeaturedProducts(Array.isArray(prods) ? prods : []);
+      });
   }, []);
 
   return (
-    <div className="bg-cream">
-      {/* ─── HERO ─── */}
-      <section className="relative h-screen overflow-hidden">
+    <div className="bg-[#FAF9F6] text-charcoal font-sans">
+      {/* 1. HERO - FULL WIDTH EDITORIAL */}
+      <section className="relative h-[85vh] min-h-[600px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=1600&q=75"
-            alt="AkpakaNG Handcrafted Leather"
-            width={1600}
-            height={900}
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/40 to-charcoal/80" />
+          <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679463902.png" alt="Akpaka Atelier" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-charcoal/30" />
         </div>
-
-        <div className="relative h-full flex flex-col items-center justify-center text-center px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="max-w-3xl"
-          >
-            <p className="text-gold-light/70 text-xs sm:text-sm tracking-[0.5em] uppercase mb-6 sm:mb-8">
-              Handcrafted in Port Harcourt
-            </p>
-            <h1 className="font-serif text-5xl sm:text-7xl lg:text-[5.5rem] font-bold text-white leading-[1.05] mb-6 sm:mb-8">
-              Where Leather
-              <br />
-              <span className="text-gold">Meets Excellence</span>
-            </h1>
-            <p className="text-white/60 text-sm sm:text-base max-w-lg mx-auto mb-10 sm:mb-12 leading-relaxed">
-              Bespoke luxury shoes crafted by master artisan Prince Sunday Achase. 
-              Hand-cut, hand-stitched, hand-finished.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button onClick={() => setView('collections')} className="bg-gold hover:bg-gold-light text-charcoal font-semibold px-8 py-6 text-sm tracking-wider">
-                Explore Collections <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button onClick={() => startCommission(null)} variant="outline" className="border-gold/40 text-gold-light hover:bg-gold/10 px-8 py-6 text-sm tracking-wider">
-                Commission Bespoke
-              </Button>
-            </div>
-          </motion.div>
-
-          <motion.div className="absolute bottom-10" animate={{ y: [0, 8, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <div className="w-5 h-9 border border-white/20 rounded-full flex items-start justify-center pt-2">
-              <div className="w-0.5 h-1.5 bg-gold rounded-full" />
-            </div>
-          </motion.div>
+        <div className="relative text-center z-10 px-4">
+          <p className="text-white text-xs tracking-[0.2em] uppercase mb-4">Discover the Collection</p>
+          <h1 className="font-serif text-5xl md:text-7xl lg:text-[6rem] text-white font-medium mb-6 drop-shadow-sm">
+            All shades of leather
+          </h1>
         </div>
       </section>
 
-      {/* ─── BRAND STRIP ─── */}
-      <section className="bg-charcoal py-5 sm:py-6">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/30 text-[10px] sm:text-xs tracking-[0.25em] uppercase">
-          <span className="flex items-center gap-1.5"><Gem className="w-3.5 h-3.5 text-gold/50" /> Italian Leather</span>
-          <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-gold/50" /> Hand-Burnished Patina</span>
-          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gold/50" /> 40+ Hours Per Pair</span>
-          <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-gold/50" /> Goodyear Welt</span>
-        </div>
-      </section>
-
-      {/* ─── FEATURED COLLECTIONS — generous whitespace ─── */}
-      <section className="py-24 sm:py-36">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-gold text-xs tracking-[0.4em] uppercase mb-4">Our Portfolio</p>
-            <h2 className="font-serif text-3xl sm:text-5xl font-bold text-charcoal">Curated Collections</h2>
-            <p className="text-muted-foreground/70 mt-5 max-w-md mx-auto text-sm leading-relaxed">
-              Each collection is an exhibition — from the selection of the leather to the final mirror-shine polish.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
-            {collections.map((collection, i) => (
-              <motion.div key={collection.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                className="group cursor-pointer" onClick={() => setView('collections')}>
-                <div className="relative h-72 sm:h-[22rem] overflow-hidden rounded-lg">
-                  <img src={collection.coverImage} alt={collection.name} width={600} height={352} loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/10 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <p className="text-gold-light/60 text-[10px] tracking-[0.3em] uppercase mb-1.5">{collection.products.length} Styles</p>
-                    <h3 className="font-serif text-2xl text-white font-semibold mb-2">{collection.name}</h3>
-                    <span className="flex items-center gap-1 text-gold-light/80 text-xs group-hover:gap-2 transition-all">
-                      Explore <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
+      {/* 2. CATEGORY NAVIGATION STRIP */}
+      <section className="py-8 bg-white border-b border-charcoal/10">
+        <div className="max-w-[1600px] mx-auto px-4 overflow-x-auto no-scrollbar">
+          <div className="flex gap-6 md:justify-center min-w-max">
+            {['NEW', 'Oxfords', 'Loafers', 'Boots', 'Bespoke', 'Accessories'].map((cat, i) => (
+              <button key={cat} onClick={() => setView('collections')} className="group flex flex-col items-center gap-3">
+                <div className="w-24 h-24 bg-[#f8f7f5] flex items-center justify-center overflow-hidden border border-charcoal/5">
+                   {cat === 'Oxfords' ? (
+                     <img src="/images/editorial/media__1784681124466.jpg" alt={cat} className="w-20 h-20 object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                   ) : cat === 'Loafers' ? (
+                     <img src="/images/editorial/media__1784681124508.jpg" alt={cat} className="w-20 h-20 object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                   ) : (
+                     <span className="font-serif text-lg text-charcoal">{cat === 'NEW' ? 'NEW' : ''}</span>
+                   )}
                 </div>
-              </motion.div>
+                <span className="text-xs uppercase tracking-wider text-charcoal/70 group-hover:text-charcoal transition-colors">{cat}</span>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── FEATURED PRODUCTS — editorial restraint ─── */}
-      <section className="py-24 sm:py-36 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-gold text-xs tracking-[0.4em] uppercase mb-4">Signature Pieces</p>
-            <h2 className="font-serif text-3xl sm:text-5xl font-bold text-charcoal">Featured Creations</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.slice(0, 4).map((product, i) => {
-              const badge = stockBadges[product.stockStatus] || stockBadges['made-to-order'];
-              return (
-                <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                  className="group cursor-pointer" onClick={() => selectProduct(product.id)}>
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted mb-4">
-                    <img src={product.images.split(',')[0]} alt={product.name} width={400} height={533} loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/10 transition-colors duration-300" />
-                    {/* Stock badge */}
-                    <span className={`absolute top-3 left-3 text-[9px] px-2 py-0.5 rounded-full font-medium ${badge.cls}`}>{badge.label}</span>
-                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button size="sm" className="w-full bg-gold hover:bg-gold-light text-charcoal font-semibold"
-                        onClick={(e) => { e.stopPropagation(); selectProduct(product.id); }}>
-                        {product.productType === 'bespoke-only' ? 'Commission' : 'View Details'}
-                      </Button>
-                    </div>
-                  </div>
-                  <h4 className="font-serif text-sm font-semibold text-charcoal group-hover:text-gold transition-colors">{product.name}</h4>
-                  <p className="text-sm text-muted-foreground mt-1">₦{product.price.toLocaleString()}</p>
-                </motion.div>
-              );
-            })}
+      {/* 3. 50/50 SPLIT BANNERS */}
+      <section className="grid grid-cols-1 md:grid-cols-2">
+        <div className="relative aspect-square md:aspect-auto md:h-[800px] overflow-hidden group cursor-pointer" onClick={() => setView('collections')}>
+          <img src="/images/editorial/media__1784676808363.png" alt="Illuminate your moments" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+            <h2 className="font-serif text-3xl md:text-5xl text-white font-medium mb-4">Illuminate your steps</h2>
+            <p className="text-white text-xs uppercase tracking-widest underline underline-offset-4 decoration-1">Shop now</p>
           </div>
+        </div>
+        <div className="relative aspect-square md:aspect-auto md:h-[800px] overflow-hidden group cursor-pointer" onClick={() => setView('collections')}>
+          <img src="/images/editorial/media__1784681124508.jpg" alt="The Loafer Edit" className="w-full h-full object-cover bg-[#f4f2ef] mix-blend-multiply transition-transform duration-700 group-hover:scale-105" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
+            <h2 className="font-serif text-3xl md:text-5xl text-charcoal font-medium mb-4 drop-shadow-sm bg-white/40 p-4 backdrop-blur-sm rounded-sm">The Loafer Edit</h2>
+          </div>
+        </div>
+      </section>
 
-          <div className="text-center mt-14">
-            <Button onClick={() => setView('collections')} variant="outline" className="border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 text-sm">
-              View All Collections <ArrowRight className="w-3.5 h-3.5 ml-1" />
+      {/* 4. MEET THE FOUNDER */}
+      <section className="bg-[#f4f2ef] border-t border-charcoal/5">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="relative aspect-[4/5] md:aspect-auto md:h-[80vh] overflow-hidden">
+            <img src="/images/editorial/media__1784681124579.jpg" alt="Prince Sunday Achase - Founder" className="w-full h-full object-cover object-top" />
+          </div>
+          <div className="flex flex-col justify-center items-center text-center px-6 py-16 md:px-12 md:py-24">
+            <span className="text-xs uppercase tracking-[0.2em] text-charcoal/50 mb-4">Meet the Artisan</span>
+            <h2 className="font-serif text-3xl md:text-5xl text-charcoal font-medium mb-6">Mastering the craft of luxury.</h2>
+            <p className="text-charcoal/70 mb-8 max-w-md leading-relaxed">
+              Every pair of Akpaka shoes tells a story of dedication, precision, and passion. Master shoemaker Prince Sunday Achase brings bespoke, handcrafted African luxury to life.
+            </p>
+            <Button onClick={() => setView('about')} variant="outline" className="border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-6 rounded-none text-xs uppercase tracking-widest transition-colors">
+              Read his story
             </Button>
           </div>
         </div>
       </section>
 
-      {/* ─── CRAFTSMANSHIP HIGHLIGHT ─── */}
-      <section className="py-24 sm:py-36 bg-charcoal text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <img src="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=1600&q=30" alt="" width={1600} height={900} loading="lazy" className="w-full h-full object-cover" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <p className="text-gold text-xs tracking-[0.4em] uppercase mb-4">The Atelier</p>
-              <h2 className="font-serif text-3xl sm:text-5xl font-bold mb-8 leading-tight">
-                Crafted By Hand,<br /><span className="text-gold">Perfected By Passion</span>
-              </h2>
-              <p className="text-white/50 leading-relaxed mb-8 text-sm">
-                Every Akpaka shoe passes through the hands of master artisans, each step executed with 
-                the precision and patience that defines true luxury. From selecting the finest Italian 
-                calfskin to the final mirror-shine polish, our process is uncompromising.
-              </p>
-              <div className="grid grid-cols-3 gap-6 mb-10">
-                {[
-                  { value: '40+', label: 'Hours Per Pair' },
-                  { value: '100%', label: 'Handcrafted' },
-                  { value: '10+', label: 'Years Mastery' },
-                ].map((stat) => (
-                  <div key={stat.label}>
-                    <p className="font-serif text-3xl sm:text-4xl font-bold text-gold">{stat.value}</p>
-                    <p className="text-[10px] text-white/40 mt-1 tracking-wider uppercase">{stat.label}</p>
-                  </div>
-                ))}
+      {/* 5. TRIPLE GRID */}
+      <section className="max-w-[1600px] mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { title: 'The Oxford', img: '/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679479513.png', bg: 'bg-[#e8e6e1]', action: () => setView('collections') },
+            { title: 'The Workshop', img: '/images/editorial/media__1784677550865.png', bg: 'bg-charcoal', action: () => setView('craftsmanship') },
+            { title: 'The Details', img: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&q=80', bg: 'bg-[#f4f2ef]', action: () => setView('about') }
+          ].map((item, i) => (
+            <div key={i} className="group cursor-pointer" onClick={item.action}>
+              <div className={`relative aspect-[3/4] overflow-hidden mb-4 ${item.bg}`}>
+                <img src={item.img} alt={item.title} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 mix-blend-multiply" />
               </div>
-              <Button onClick={() => setView('craftsmanship')} className="bg-gold hover:bg-gold-light text-charcoal font-semibold">
-                Explore Our Craft <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
-              <div className="aspect-[4/5] rounded-lg overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80" alt="AkpakaNG Workshop" width={800} height={1000} loading="lazy" className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-gold text-charcoal p-5 rounded-lg shadow-xl max-w-[16rem] hidden sm:block">
-                <p className="font-serif text-base font-semibold italic leading-snug">
-                  &ldquo;I have been working non-stop for almost 10 years.&rdquo;
-                </p>
-                <p className="text-xs mt-2 font-medium">— Prince Sunday Achase</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── COMMISSION CTA ─── */}
-      <section className="py-24 sm:py-36">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <p className="text-gold text-xs tracking-[0.4em] uppercase mb-4">Bespoke Service</p>
-            <h2 className="font-serif text-3xl sm:text-5xl font-bold text-charcoal mb-6 leading-tight">
-              Commission Your<br /><span className="text-gold">Perfect Pair</span>
-            </h2>
-            <p className="text-muted-foreground/70 leading-relaxed mb-10 text-sm max-w-lg mx-auto">
-              Not just a purchase — an experience. From the initial consultation to the final fitting, 
-              our bespoke commission process ensures every detail of your shoe is crafted to your 
-              exact specifications.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button onClick={() => startCommission(null)} className="bg-charcoal hover:bg-charcoal/90 text-gold font-semibold px-8 py-6 text-sm">
-                Begin Commission <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <a href="https://wa.me/2348180474183?text=Hello%20AkpakaNG!%20I%20would%20like%20to%20discuss%20a%20bespoke%20commission." target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-6 text-sm">Chat on WhatsApp</Button>
-              </a>
+              <h3 className="font-serif text-xl text-charcoal px-2">{item.title}</h3>
             </div>
-          </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* ─── VERIFIED TESTIMONIALS ─── */}
-      <section className="py-24 sm:py-36 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-gold text-xs tracking-[0.4em] uppercase mb-4">Testimonials</p>
-            <h2 className="font-serif text-3xl sm:text-5xl font-bold text-charcoal">What Our Clients Say</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: 'Chidi Okafor', quote: 'The patina is unlike anything I have seen. Worth every naira.', location: 'Lagos', source: 'WhatsApp' },
-              { name: 'Emeka Nwankwo', quote: 'I have bought shoes from Italy and England. These rival the best of them.', location: 'Abuja', source: 'Instagram' },
-              { name: 'Tunde Adebayo', quote: 'My wedding shoes were the highlight of my outfit. Guests could not stop talking about them.', location: 'Port Harcourt', source: 'WhatsApp' },
-            ].map((testimonial, i) => (
-              <motion.div key={testimonial.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="text-center p-8 sm:p-10">
-                <div className="flex items-center justify-center gap-0.5 mb-5">
-                  {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 fill-gold text-gold" />)}
+      {/* 6. "AKPAKA COLLECTION" GRID */}
+      <section className="max-w-[1600px] mx-auto px-4 py-16">
+        <div className="flex items-baseline gap-4 mb-10">
+          <h2 className="font-serif text-3xl md:text-4xl text-charcoal font-medium uppercase">Akpaka Collection</h2>
+          <button onClick={() => setView('collections')} className="text-xs uppercase tracking-widest text-charcoal/60 underline underline-offset-4 hover:text-charcoal transition-colors">Shop all</button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Large Lifestyle */}
+          <div className="relative aspect-[4/5] lg:aspect-auto h-full overflow-hidden group cursor-pointer bg-[#e8e6e1]" onClick={() => setView('collections')}>
+            <img src="/images/editorial/media_48b217fb-dfdd-4f23-92a3-a698d0274a2c_1784679463902.png" alt="Collection Lifestyle" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          </div>
+          
+          {/* Right 2x2 Product Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {featuredProducts.slice(0, 4).map((product, i) => (
+              <div key={product.id} className="group cursor-pointer flex flex-col" onClick={() => selectProduct(product.id)}>
+                <div className="relative aspect-[3/4] bg-[#f8f7f5] mb-4 overflow-hidden flex items-center justify-center p-4 border border-charcoal/5">
+                   <img src={product.images.split(',')[0]} alt={product.name} className="w-full h-auto object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                     <Button size="icon" variant="ghost" className="rounded-full bg-white text-charcoal shadow-sm h-8 w-8 hover:bg-gold hover:text-white">
+                        <ShoppingBag className="w-4 h-4" />
+                     </Button>
+                   </div>
                 </div>
-                <p className="font-serif text-lg text-charcoal italic mb-5 leading-relaxed">
-                  &ldquo;{testimonial.quote}&rdquo;
-                </p>
-                <p className="font-semibold text-charcoal text-sm">{testimonial.name}</p>
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="text-xs text-muted-foreground">{testimonial.location}</span>
-                  <span className="text-[9px] text-muted-foreground/50">&middot;</span>
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-green-700">
-                    <BadgeCheck className="w-3 h-3" /> Verified via {testimonial.source}
-                  </span>
-                </div>
-              </motion.div>
+                <h4 className="font-serif text-sm font-medium text-charcoal group-hover:text-gold transition-colors">{product.name}</h4>
+                <p className="text-sm text-charcoal/60 mt-1">₦{product.price.toLocaleString()}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── TRUST SIGNALS ─── */}
-      <section className="py-12 bg-charcoal">
-        <div className="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-center gap-8 sm:gap-12 text-white/40 text-[10px] tracking-wider uppercase">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gold/50" /> Certificate of Authenticity</span>
-          <span className="flex items-center gap-1.5"><Wrench className="w-4 h-4 text-gold/50" /> Lifetime Resoling</span>
-          <span className="flex items-center gap-1.5"><FileText className="w-4 h-4 text-gold/50" /> 14-Day Returns</span>
+      {/* 7. PROMOTIONAL TEXT BANNER */}
+      <section className="bg-[#e8e4db] py-20 px-6 text-center">
+        <h2 className="font-serif text-3xl md:text-5xl text-charcoal font-medium max-w-3xl mx-auto leading-tight">
+          Special and exclusive bespoke commissions available upon request.
+        </h2>
+        <div className="mt-8">
+          <Button onClick={() => startCommission(null)} variant="outline" className="border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-6 rounded-none text-xs uppercase tracking-widest transition-colors">
+            Inquire Now
+          </Button>
         </div>
       </section>
 
-      {/* ─── PRESS MENTIONS ─── */}
-      <section className="py-16 bg-cream">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-muted-foreground/50 text-[10px] tracking-[0.3em] uppercase mb-8">As Featured In</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14">
-            {['Legit.ng', 'ConnectNigeria', 'Tunde Ednut', 'TikTok Nigeria'].map((pub) => (
-              <span key={pub} className="font-serif text-lg sm:text-xl text-charcoal/20 hover:text-charcoal/50 transition-colors">{pub}</span>
-            ))}
+      {/* 8. BOTTOM HIGHLIGHTS */}
+      <section className="max-w-[1600px] mx-auto px-4 py-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative aspect-square overflow-hidden group cursor-pointer bg-charcoal" onClick={() => setView('craftsmanship')}>
+             <img src="/images/editorial/media__1784677550865.png" alt="Promo 1" className="w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105" />
+             <div className="absolute bottom-6 left-6 right-6">
+                <p className="text-white text-lg font-serif">The Patina Process<br/>Behind the scenes</p>
+             </div>
+          </div>
+          <div className="relative aspect-square overflow-hidden group cursor-pointer bg-charcoal" onClick={() => setView('about')}>
+             <img src="/images/editorial/media__1784674915830.jpg" alt="Promo 2" className="w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105" />
+             <div className="absolute bottom-6 left-6 right-6">
+                <p className="text-white text-lg font-serif">Italian Calfskin<br/>Materials matter</p>
+             </div>
+          </div>
+          <div className="relative aspect-square bg-[#adcbe3] flex flex-col items-center justify-center p-8 group cursor-pointer hover:bg-[#9cbcd4] transition-colors" onClick={() => setView('masterclass')}>
+             <span className="text-7xl font-serif text-white mb-4">%</span>
+             <p className="text-white text-lg font-serif text-center">Exclusive member<br/>discounts</p>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
