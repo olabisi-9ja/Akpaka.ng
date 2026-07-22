@@ -12,12 +12,9 @@ export default async function AdminProductEditPage({
   const { id } = await params;
   const isNew = id === "new";
   
-  let product = null;
-  if (!isNew) {
-    product = await db.product.findUnique({
-      where: { id },
-    });
-  }
+  const product = isNew ? null : await db.product.findUnique({
+    where: { id },
+  });
 
   return (
     <div>
