@@ -15,6 +15,31 @@ export default async function AdminProductsPage() {
     });
   } catch (e) {
     console.error("Database connection failed on Vercel Serverless for products:", e);
+    // Dummy fallback for Vercel deployment preview if SQLite fails
+    products = [
+      {
+        id: "demo-1",
+        name: "The Chief Executive Oxford",
+        category: "shoes",
+        price: 150000,
+        currency: "NGN",
+        stockStatus: "made-to-order",
+        stockQuantity: null,
+        images: "https://images.unsplash.com/photo-1614252339474-af3ec31d87f7?q=80&w=600",
+        createdAt: new Date(),
+      },
+      {
+        id: "demo-2",
+        name: "Billionaire's Club Loafer",
+        category: "shoes",
+        price: 185000,
+        currency: "NGN",
+        stockStatus: "in-stock",
+        stockQuantity: 4,
+        images: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?q=80&w=600",
+        createdAt: new Date(Date.now() - 86400000),
+      }
+    ];
   }
 
   return (
