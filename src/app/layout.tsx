@@ -1,21 +1,6 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  display: "swap",
-  preload: true,
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-  preload: true,
-});
 
 export const metadata: Metadata = {
   title: "AkpakaNG — Where Leather Meets Excellence | Bespoke Luxury Shoes Nigeria",
@@ -101,14 +86,12 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=1600&q=75"
+          href="/images/akpaka-hero-campaign.jpg"
           type="image/jpeg"
         />
         <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd} />
       </head>
-      <body
-        className={`${playfair.variable} ${inter.variable} antialiased bg-background text-foreground`}
-      >
+      <body className="antialiased bg-background text-foreground">
         {children}
         <Toaster />
       </body>

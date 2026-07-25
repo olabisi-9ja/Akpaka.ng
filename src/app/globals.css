@@ -48,6 +48,10 @@
 }
 
 :root {
+  /* System stacks keep the storefront fast and fully usable even when an
+     external font CDN is unavailable. */
+  --font-inter: "Arial", "Helvetica Neue", Helvetica, sans-serif;
+  --font-playfair: Georgia, "Times New Roman", serif;
   --radius: 0.625rem;
   --background: oklch(0.98 0.005 80);
   --foreground: oklch(0.15 0.01 60);
@@ -144,6 +148,23 @@
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+::selection {
+  background: #111;
+  color: #fff;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Gold underline decoration */
