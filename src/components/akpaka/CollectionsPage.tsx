@@ -1,268 +1,142 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, Heart, LayoutGrid, List, SlidersHorizontal, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { Button } from '@/components/ui/button';
-import { SlidersHorizontal, Grid3X3, LayoutList, ArrowRight, Star } from 'lucide-react';
 
 interface Product {
   id: string;
   name: string;
-  slug: string;
   description: string;
   price: number;
   images: string;
   category: string;
-  featured: boolean;
   productType: string;
   stockStatus: string;
-  stockQuantity: number;
-  baseLeather: string | null;
-  soleType: string | null;
-  craftingHours: string | null;
-  leatherSource: string | null;
-  artisanQuote: string | null;
-  collectionId: string | null;
-  collection: { name: string; slug: string } | null;
-  reviews: { rating: number; comment: string; authorName: string }[];
-}
-
-interface Collection {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  coverImage: string;
-  products: Product[];
+  baseLeather?: string | null;
+  craftingHours?: string | null;
+  collectionId?: string | null;
+  reviews?: { rating: number }[];
 }
 
 const categories = ['All', 'Oxford', 'Loafer', 'Boot', 'Wedding'];
-
-const stockBadges: Record<string, { label: string; cls: string }> = {
-  'in-stock': { label: 'In Stock', cls: 'bg-green-100 text-green-800' },
-  'low-stock': { label: 'Few Left', cls: 'bg-amber-100 text-amber-800' },
-  'made-to-order': { label: 'Made to Order', cls: 'bg-blue-100 text-blue-800' },
-  'bespoke-only': { label: 'Bespoke', cls: 'bg-purple-100 text-purple-800' },
-  'waitlist': { label: 'Waitlist', cls: 'bg-red-100 text-red-800' },
-};
+const styles = [
+  { label: 'Oxfords', image: '/images/editorial/media__1784681124466.jpg', category: 'Oxford' },
+  { label: 'Loafers', image: '/images/editorial/media__1784681124508.jpg', category: 'Loafer' },
+  { label: 'Boots', image: '/images/akpaka-hero-campaign.jpg', category: 'Boot' },
+];
 
 export function CollectionsPage() {
-  const { selectProduct, startCommission } = useAppStore();
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const { selectProduct, searchQuery, setSearchQuery } = useAppStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sort, setSort] = useState<'featured' | 'low' | 'high'>('featured');
+  const [saved, setSaved] = useState<string[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/products/collections').then(r => r.json()),
-      fetch('/api/products').then(r => r.json()),
-    ]).then(([cols, prods]) => {
-      setCollections(Array.isArray(cols) ? cols : []);
-      setProducts(Array.isArray(prods) ? prods : []);
-    });
+    fetch('/api/products')
+      .then((response) => response.json())
+      .then((catalogue) => setProducts(Array.isArray(catalogue) ? catalogue : []))
+      .catch(() => setProducts([]));
   }, []);
 
-  const filteredProducts = products.filter((p) => {
-    const catMatch = activeCategory === 'All' || p.category.toLowerCase() === activeCategory.toLowerCase();
-    const colMatch = !selectedCollection || p.collectionId === selectedCollection;
-    return catMatch && colMatch;
-  });
+  const filteredProducts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const result = products.filter((product) => {
+      const categoryMatch = activeCategory === 'All' || product.category.toLowerCase() === activeCategory.toLowerCase();
+      const searchMatch = !query || `${product.name} ${product.category} ${product.baseLeather || ''}`.toLowerCase().includes(query);
+      return categoryMatch && searchMatch;
+    });
+
+    if (sort === 'low') return [...result].sort((a, b) => a.price - b.price);
+    if (sort === 'high') return [...result].sort((a, b) => b.price - a.price);
+    return result;
+  }, [activeCategory, products, searchQuery, sort]);
+
+  const selectCategory = (category: string) => {
+    setActiveCategory(category);
+    setSearchQuery('');
+  };
 
   return (
-    <div className="bg-cream pt-24 sm:pt-32 pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <p className="text-gold text-sm tracking-[0.3em] uppercase mb-3">Our Portfolio</p>
-          <h1 className="font-serif text-4xl sm:text-6xl font-bold text-charcoal">Collections</h1>
-          <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-            Explore our full range of handcrafted luxury shoes. Each piece is a work of art, 
-            made with the finest leathers and traditional techniques.
-          </p>
-        </motion.div>
+    <main className="min-h-screen bg-white pb-20 pt-[118px] text-[#111] lg:pt-[132px]">
+      <section className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-10">
+        <div className="flex flex-col gap-6 border-b border-black/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.19em] text-black/45">Akpaka footwear</p>
+            <h1 className="mt-2 text-4xl font-bold tracking-[-0.06em] sm:text-5xl">Shoes for every arrival.</h1>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-black/60">Handcrafted leather footwear, designed in Port Harcourt and finished for the places you are headed next.</p>
+          </div>
+          <p className="text-sm text-black/55">{products.length} styles</p>
+        </div>
 
-        {/* Collection Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <button
-            onClick={() => setSelectedCollection(null)}
-            className={`p-4 rounded-lg border-2 transition-all text-center ${
-              !selectedCollection
-                ? 'border-gold bg-gold/10'
-                : 'border-border bg-white hover:border-gold/50'
-            }`}
-          >
-            <span className="font-serif font-semibold text-charcoal">All Collections</span>
-            <p className="text-xs text-muted-foreground mt-1">{products.length} shoes</p>
-          </button>
-          {collections.map((col) => (
-            <button
-              key={col.id}
-              onClick={() => setSelectedCollection(col.id)}
-              className={`p-4 rounded-lg border-2 transition-all text-center ${
-                selectedCollection === col.id
-                  ? 'border-gold bg-gold/10'
-                  : 'border-border bg-white hover:border-gold/50'
-              }`}
-            >
-              <span className="font-serif font-semibold text-charcoal text-sm">{col.name}</span>
-              <p className="text-xs text-muted-foreground mt-1">{col.products.length} styles</p>
+        <div className="grid grid-cols-3 gap-3 py-7 sm:gap-4 lg:max-w-4xl">
+          {styles.map((style) => (
+            <button key={style.label} onClick={() => selectCategory(style.category)} className="group text-left">
+              <div className="aspect-[4/3] overflow-hidden bg-[#f5f5f5]"><img src={style.image} alt={style.label} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /></div>
+              <p className="mt-3 text-sm font-bold">Shop {style.label}</p>
             </button>
           ))}
         </div>
 
-        {/* Category Filter & View Toggle */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 text-sm rounded-full transition-all ${
-                  activeCategory === cat
-                    ? 'bg-charcoal text-gold'
-                    : 'bg-white text-muted-foreground hover:bg-charcoal/5'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-charcoal text-gold' : 'text-muted-foreground hover:bg-muted'}`}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-charcoal text-gold' : 'text-muted-foreground hover:bg-muted'}`}
-            >
-              <LayoutList className="w-4 h-4" />
-            </button>
+        <div className="sticky top-[68px] z-20 -mx-4 border-y border-black/10 bg-white px-4 py-3 sm:mx-0 sm:px-0 lg:top-[100px]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto pr-4">
+              {categories.map((category) => (
+                <button key={category} onClick={() => selectCategory(category)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeCategory === category ? 'bg-black text-white' : 'bg-[#f5f5f5] hover:bg-black/10'}`}>{category === 'All' ? 'All shoes' : category}</button>
+              ))}
+            </div>
+            <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${filtersOpen ? 'border-black bg-black text-white' : 'border-black/20'}`}><SlidersHorizontal className="h-4 w-4" /> Filters</button>
           </div>
         </div>
 
-        {/* Products */}
+        {filtersOpen && (
+          <section className="border-b border-black/10 py-5">
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+              <div><p className="text-sm font-bold">Refine your selection</p><p className="mt-1 text-xs text-black/55">Choose a price order or search by material and style.</p></div>
+              <div className="flex flex-wrap gap-2"><button onClick={() => setSort('featured')} className={`rounded-full px-4 py-2 text-sm ${sort === 'featured' ? 'bg-black text-white' : 'bg-[#f5f5f5]'}`}>Featured</button><button onClick={() => setSort('low')} className={`rounded-full px-4 py-2 text-sm ${sort === 'low' ? 'bg-black text-white' : 'bg-[#f5f5f5]'}`}>Price: low to high</button><button onClick={() => setSort('high')} className={`rounded-full px-4 py-2 text-sm ${sort === 'high' ? 'bg-black text-white' : 'bg-[#f5f5f5]'}`}>Price: high to low</button></div>
+            </div>
+          </section>
+        )}
+
+        <div className="flex items-center justify-between py-6">
+          <p className="text-sm font-medium">{filteredProducts.length} results {searchQuery && <span className="font-normal text-black/55">for “{searchQuery}”</span>}</p>
+          <div className="hidden items-center gap-1 sm:flex"><button aria-label="Grid view" onClick={() => setViewMode('grid')} className={`grid h-9 w-9 place-items-center rounded-full ${viewMode === 'grid' ? 'bg-black text-white' : 'hover:bg-[#f5f5f5]'}`}><LayoutGrid className="h-4 w-4" /></button><button aria-label="List view" onClick={() => setViewMode('list')} className={`grid h-9 w-9 place-items-center rounded-full ${viewMode === 'list' ? 'bg-black text-white' : 'hover:bg-[#f5f5f5]'}`}><List className="h-4 w-4" /></button></div>
+        </div>
+
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="font-serif text-2xl text-charcoal mb-2">No shoes found</p>
-            <p className="text-muted-foreground">Try adjusting your filters</p>
-          </div>
+          <div className="grid min-h-[360px] place-items-center border-y border-black/10 text-center"><div><p className="text-2xl font-bold tracking-[-0.04em]">Nothing in this cut yet.</p><p className="mt-2 text-sm text-black/55">Try another style or clear your search.</p><button onClick={() => { setSearchQuery(''); setActiveCategory('All'); }} className="mt-5 rounded-full bg-black px-5 py-3 text-xs font-bold text-white">Show all shoes</button></div></div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300"
-                onClick={() => selectProduct(product.id)}
-              >
-                <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                  <img
-                    src={product.images.split(',')[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/20 transition-colors duration-300" />
-                  <div className="absolute top-3 left-3">
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${(stockBadges[product.stockStatus] || stockBadges['made-to-order']).cls}`}>
-                      {(stockBadges[product.stockStatus] || stockBadges['made-to-order']).label}
-                    </span>
-                  </div>
-                  <div className="absolute top-3 right-3">
-                    <span className="bg-gold/90 text-charcoal text-[9px] font-semibold px-2 py-0.5 rounded-full">
-                      {product.category}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button
-                      size="sm"
-                      className="w-full bg-gold hover:bg-gold-light text-charcoal font-semibold"
-                      onClick={(e) => { e.stopPropagation(); selectProduct(product.id); }}
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-serif text-base font-semibold text-charcoal group-hover:text-gold transition-colors">
-                    {product.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{product.baseLeather}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="text-gold font-semibold">₦{product.price.toLocaleString()}</span>
-                    {product.reviews.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-gold text-gold" />
-                        <span className="text-xs text-muted-foreground">
-                          {(product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length).toFixed(1)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4">
+            {filteredProducts.map((product) => <ProductCard key={product.id} product={product} saved={saved.includes(product.id)} onSave={() => setSaved((items) => items.includes(product.id) ? items.filter((id) => id !== product.id) : [...items, product.id])} onSelect={() => selectProduct(product.id)} />)}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredProducts.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex gap-6 bg-white rounded-lg p-4 shadow-sm hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => selectProduct(product.id)}
-              >
-                <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                  <img
-                    src={product.images.split(',')[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <span className="text-xs text-gold tracking-wider uppercase">{product.category}</span>
-                      <h3 className="font-serif text-xl font-semibold text-charcoal mt-1">{product.name}</h3>
-                    </div>
-                    <span className="text-gold font-semibold text-lg whitespace-nowrap">₦{product.price.toLocaleString()}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{product.description}</p>
-                  <div className="flex items-center gap-4 mt-3">
-                    {product.baseLeather && (
-                      <span className="text-xs text-muted-foreground">{product.baseLeather}</span>
-                    )}
-                    {product.craftingHours && (
-                      <span className="text-xs text-muted-foreground">{product.craftingHours}</span>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-auto border-gold text-gold hover:bg-gold/10"
-                      onClick={(e) => { e.stopPropagation(); selectProduct(product.id); }}
-                    >
-                      View Details <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
+          <div className="border-t border-black/10">
+            {filteredProducts.map((product) => (
+              <button key={product.id} onClick={() => selectProduct(product.id)} className="flex w-full gap-5 border-b border-black/10 py-4 text-left transition-colors hover:bg-[#f8f8f8] sm:gap-8 sm:p-5">
+                <img src={product.images.split(',')[0]} alt={product.name} className="h-28 w-28 bg-[#f5f5f5] object-cover mix-blend-multiply sm:h-36 sm:w-40" />
+                <span className="flex min-w-0 flex-1 flex-col justify-center"><span className="text-[10px] font-bold uppercase tracking-wider text-black/45">{product.category} · {product.stockStatus === 'in-stock' ? 'Ready to wear' : 'Made to order'}</span><span className="mt-2 text-lg font-bold tracking-[-0.035em] sm:text-xl">{product.name}</span><span className="mt-1 line-clamp-2 max-w-xl text-sm text-black/55">{product.description}</span><span className="mt-3 text-sm font-medium">₦{product.price.toLocaleString()}</span></span>
+              </button>
             ))}
           </div>
         )}
+      </section>
+    </main>
+  );
+}
+
+function ProductCard({ product, saved, onSave, onSelect }: { product: Product; saved: boolean; onSave: () => void; onSelect: () => void }) {
+  const label = product.stockStatus === 'in-stock' ? 'Ready to wear' : product.stockStatus === 'bespoke-only' ? 'Bespoke' : product.stockStatus === 'waitlist' ? 'Coming back soon' : 'Made to order';
+  return (
+    <article onClick={onSelect} className="group cursor-pointer text-left">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#f5f5f5]">
+        <img src={product.images.split(',')[0]} alt={product.name} className="h-full w-full object-cover mix-blend-multiply transition duration-500 group-hover:scale-[1.04]" />
+        <span className="absolute bottom-3 left-3 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide">{label}</span>
+        <button onClick={(event) => { event.stopPropagation(); onSave(); }} aria-label={`Save ${product.name}`} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/95"><Heart className={`h-[18px] w-[18px] ${saved ? 'fill-[#8d3d27] text-[#8d3d27]' : ''}`} /></button>
       </div>
-    </div>
+      <div className="mt-3 flex gap-2"><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold sm:text-base">{product.name}</h2><p className="mt-1 truncate text-xs text-black/55">{product.baseLeather || 'Hand-finished leather'}</p></div><p className="whitespace-nowrap text-sm">₦{product.price.toLocaleString()}</p></div>
+    </article>
   );
 }

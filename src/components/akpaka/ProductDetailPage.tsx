@@ -1,514 +1,118 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Heart, Ruler, ShieldCheck, Star, Truck } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { Button } from '@/components/ui/button';
-import { Star, Clock, MapPin, ChevronRight, Gem, ShieldCheck, FileText, Wrench, BadgeCheck, Users } from 'lucide-react';
 
-interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  authorName: string;
-  verified: boolean;
-  source: string;
-}
-
+interface Review { id?: string; rating: number; comment?: string; authorName?: string; verified?: boolean; }
 interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  images: string;
-  category: string;
-  productType: string;
-  stockStatus: string;
-  stockQuantity: number;
-  baseLeather: string | null;
-  soleType: string | null;
-  craftingHours: string | null;
-  leatherSource: string | null;
-  artisanQuote: string | null;
-  collection: { name: string } | null;
-  reviews: Review[];
+  id: string; name: string; description: string; price: number; images: string; category: string; productType: string; stockStatus: string;
+  stockQuantity?: number; baseLeather?: string | null; soleType?: string | null; craftingHours?: string | null; leatherSource?: string | null;
+  artisanQuote?: string | null; collection?: { name: string } | null; reviews?: Review[];
 }
 
-const stockLabels: Record<string, { label: string; color: string }> = {
-  'in-stock': { label: 'In Stock', color: 'bg-green-100 text-green-800' },
-  'low-stock': { label: 'Only a Few Remaining', color: 'bg-amber-100 text-amber-800' },
-  'made-to-order': { label: 'Made to Order', color: 'bg-blue-100 text-blue-800' },
-  'bespoke-only': { label: 'Bespoke Commission Only', color: 'bg-purple-100 text-purple-800' },
-  'waitlist': { label: 'Join the Waitlist', color: 'bg-red-100 text-red-800' },
-};
+const sizes = ['38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48'];
 
 export function ProductDetailPage() {
   const { selectedProductId, setView, startCommission, addToCart, trackEvent } = useAppStore();
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'story' | 'materials' | 'reviews' | 'care'>('story');
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [waitlistName, setWaitlistName] = useState('');
-  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
-
-  const sizes = ['38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48'];
+  const [loading, setLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [activeImage, setActiveImage] = useState(0);
+  const [added, setAdded] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [waitlist, setWaitlist] = useState({ name: '', email: '' });
+  const [waitlistSent, setWaitlistSent] = useState(false);
 
   useEffect(() => {
-    if (selectedProductId) {
-      fetch(`/api/products?id=${selectedProductId}`)
-        .then(r => r.json())
-        .then(data => setProduct(data.error ? null : data));
-    }
+    if (!selectedProductId) return;
+    let active = true;
+    fetch(`/api/products?id=${selectedProductId}`)
+      .then((response) => response.json())
+      .then((item) => {
+        if (!active) return;
+        setProduct(item?.error ? null : item);
+        setSelectedSize('');
+        setActiveImage(0);
+        setLoading(false);
+      })
+      .catch(() => { if (active) { setProduct(null); setLoading(false); } });
+    return () => { active = false; };
   }, [selectedProductId]);
 
-  if (!product) {
-    return (
-      <div className="bg-cream pt-32 pb-20 min-h-screen flex items-center justify-center">
-        <div className="animate-pulse space-y-4 text-center">
-          <div className="w-24 h-24 bg-muted rounded-full mx-auto" />
-          <p className="text-muted-foreground text-sm">Loading details&hellip;</p>
-        </div>
-      </div>
-    );
-  }
+  const images = useMemo(() => product?.images.split(',').filter(Boolean) ?? [], [product]);
+  const reviews = product?.reviews ?? [];
+  const averageRating = reviews.length ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) : null;
 
-  const reviews = product.reviews ?? [];
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
+  if (loading) return <main className="grid min-h-screen place-items-center bg-white pt-[100px]"><div className="h-12 w-12 animate-spin rounded-full border-2 border-black/10 border-t-black" /></main>;
+  if (!product) return <main className="grid min-h-screen place-items-center bg-white px-5 pt-[100px] text-center"><div><p className="text-3xl font-bold tracking-[-0.05em]">This style has moved on.</p><p className="mt-2 text-sm text-black/55">Explore the latest work from the Akpaka atelier.</p><button onClick={() => setView('collections')} className="mt-6 rounded-full bg-black px-6 py-3 text-xs font-bold text-white">Shop all shoes</button></div></main>;
 
-  const stockInfo = stockLabels[product.stockStatus] || stockLabels['made-to-order'];
-  const isBespokeOnly = product.productType === 'bespoke-only';
-  const isWaitlist = product.stockStatus === 'waitlist';
   const isReadyToWear = product.productType === 'ready-to-wear';
+  const isWaitlist = product.stockStatus === 'waitlist';
+  const isBespoke = product.productType === 'bespoke-only' || product.productType === 'made-to-order';
+  const stockCopy = isWaitlist ? 'Coming back soon' : isReadyToWear ? 'Ready to wear' : product.productType === 'bespoke-only' ? 'Bespoke commission' : 'Made to order';
 
-  // Product structured data
-  const productJsonLd = {
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      name: product.name,
-      description: product.description,
-      image: product.images.split(',')[0],
-      brand: { "@type": "Brand", name: "AkpakaNG" },
-      offers: {
-        "@type": "Offer",
-        price: product.price,
-        priceCurrency: "NGN",
-        availability: product.stockStatus === 'in-stock' ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
-        seller: { "@type": "Organization", name: "AkpakaNG" },
-      },
-      aggregateRating: reviews.length > 0 ? {
-        "@type": "AggregateRating",
-        ratingValue: avgRating,
-        reviewCount: reviews.length,
-      } : undefined,
-    }),
+  const add = () => {
+    if (!selectedSize) return;
+    addToCart({ productId: product.id, name: product.name, price: product.price, quantity: 1, image: images[0], size: selectedSize, type: 'ready-to-wear', leather: product.baseLeather || undefined, sole: product.soleType || undefined });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
   };
 
-  const handleAddToCart = () => {
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.images.split(',')[0],
-      size: selectedSize || undefined,
-      type: isReadyToWear ? 'ready-to-wear' : 'bespoke',
-      leather: product.baseLeather || undefined,
-      sole: product.soleType || undefined,
-    });
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
-  };
-
-  const handleWaitlist = async () => {
-    try {
-      await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id, email: waitlistEmail, name: waitlistName }),
-      });
-      setWaitlistSubmitted(true);
-      trackEvent('join_waitlist', { productId: product.id });
-    } catch { /* silent */ }
+  const joinWaitlist = async () => {
+    if (!waitlist.name || !waitlist.email) return;
+    await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: product.id, ...waitlist }) }).catch(() => undefined);
+    setWaitlistSent(true);
+    trackEvent('join_waitlist', { productId: product.id });
   };
 
   return (
-    <div className="bg-cream pt-24 sm:pt-32 pb-20">
-      <script type="application/ld+json" dangerouslySetInnerHTML={productJsonLd} />
+    <main className="min-h-screen bg-white pb-20 pt-[100px] text-[#111] lg:pt-[132px]">
+      <div className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-10">
+        <nav className="mb-5 flex items-center gap-1.5 text-xs text-black/55"><button onClick={() => setView('home')} className="hover:text-black">Home</button><ChevronRight className="h-3 w-3" /><button onClick={() => setView('collections')} className="hover:text-black">Shoes</button><ChevronRight className="h-3 w-3" /><span className="max-w-[200px] truncate text-black">{product.name}</span></nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-10">
-          <button onClick={() => setView('home')} className="hover:text-gold transition-colors">Home</button>
-          <ChevronRight className="w-3 h-3" />
-          <button onClick={() => setView('collections')} className="hover:text-gold transition-colors">Collections</button>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-charcoal">{product.name}</span>
-        </nav>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-          {/* Product Images — editorial whitespace */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
-            <div className="aspect-[4/5] rounded-lg overflow-hidden bg-muted mb-4">
-              <img
-                src={product.images.split(',')[0]}
-                alt={product.name}
-                width={800}
-                height={1000}
-                loading="eager"
-                className="w-full h-full object-cover"
-              />
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,.65fr)] lg:gap-12">
+          <section>
+            <div className="relative aspect-[4/5] overflow-hidden bg-[#f5f5f5] lg:hidden">
+              <img src={images[activeImage] || images[0]} alt={product.name} className="h-full w-full object-cover mix-blend-multiply" />
+              {images.length > 1 && <><button onClick={() => setActiveImage((activeImage - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white"><ChevronLeft className="h-5 w-5" /></button><button onClick={() => setActiveImage((activeImage + 1) % images.length)} className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white"><ChevronRight className="h-5 w-5" /></button></>}
             </div>
-            <div className="grid grid-cols-4 gap-3">
-              {product.images.split(',').map((img, i) => (
-                <div key={i} className="aspect-square rounded-md overflow-hidden bg-muted cursor-pointer hover:ring-2 ring-gold transition-all">
-                  <img src={img} alt="" width={200} height={200} loading="lazy" className="w-full h-full object-cover" />
-                </div>
-              ))}
+            <div className="hidden grid-cols-2 gap-3 lg:grid">
+              {images.map((image, index) => <button key={`${image}-${index}`} onClick={() => setActiveImage(index)} className={`relative aspect-[4/5] overflow-hidden bg-[#f5f5f5] ${activeImage === index ? 'ring-1 ring-black' : ''}`}><img src={image} alt={`${product.name} view ${index + 1}`} className="h-full w-full object-cover mix-blend-multiply transition duration-500 hover:scale-105" /></button>)}
             </div>
-          </motion.div>
+            {images.length > 1 && <div className="mt-3 flex gap-2 lg:hidden">{images.map((image, index) => <button aria-label={`Show image ${index + 1}`} key={`${image}-thumb-${index}`} onClick={() => setActiveImage(index)} className={`h-1.5 flex-1 rounded-full ${activeImage === index ? 'bg-black' : 'bg-black/15'}`} />)}</div>}
+          </section>
 
-          {/* Product Info — restrained, spacious layout */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="flex flex-col">
-            {product.collection && (
-              <p className="text-gold text-xs tracking-[0.3em] uppercase mb-3">{product.collection.name}</p>
-            )}
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal mb-4">
-              {product.name}
-            </h1>
+          <aside className="lg:sticky lg:top-[124px] lg:h-fit">
+            <div className="flex items-start justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/45">{product.collection?.name || `${product.category} collection`}</p><h1 className="mt-2 text-3xl font-bold leading-[1.02] tracking-[-0.055em] sm:text-4xl">{product.name}</h1></div><button onClick={() => setSaved(!saved)} aria-label="Save this product" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#f5f5f5]"><Heart className={`h-5 w-5 ${saved ? 'fill-[#8d3d27] text-[#8d3d27]' : ''}`} /></button></div>
+            <p className="mt-4 text-lg">₦{product.price.toLocaleString()}</p>
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold"><span className={`h-2 w-2 rounded-full ${isWaitlist ? 'bg-amber-500' : 'bg-emerald-600'}`} />{stockCopy}</p>
+            <p className="mt-5 max-w-lg text-sm leading-relaxed text-black/65">{product.description}</p>
 
-            {/* Stock Status Badge */}
-            <div className="mb-4">
-              <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-medium ${stockInfo.color}`}>
-                {isBespokeOnly && <BadgeCheck className="w-3 h-3" />}
-                {stockInfo.label}
-                {product.stockStatus === 'low-stock' && ` — ${product.stockQuantity} pairs`}
-                {product.stockStatus === 'in-stock' && ` — ${product.stockQuantity} pairs available`}
-              </span>
+            {averageRating && <button className="mt-5 flex items-center gap-2 text-sm underline underline-offset-4"><span className="flex">{Array.from({ length: 5 }).map((_, index) => <Star key={index} className={`h-4 w-4 ${index < Math.round(Number(averageRating)) ? 'fill-black' : 'fill-black/15 text-black/15'}`} />)}</span> {averageRating} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})</button>}
+
+            {!isBespoke && <div className="mt-8 border-t border-black/10 pt-6"><div className="flex items-center justify-between"><p className="text-sm font-bold">Select size</p><button onClick={() => setView('policies')} className="inline-flex items-center gap-1 text-xs underline underline-offset-4"><Ruler className="h-3.5 w-3.5" /> Size guide</button></div><div className="mt-4 grid grid-cols-5 gap-2 sm:grid-cols-6">{sizes.map((size) => <button key={size} onClick={() => setSelectedSize(size)} className={`h-11 border text-sm transition-colors ${selectedSize === size ? 'border-black bg-black text-white' : 'border-black/15 hover:border-black'}`}>{size}</button>)}</div></div>}
+
+            <div className="mt-7 space-y-3">
+              {isReadyToWear && !isWaitlist && <button disabled={!selectedSize} onClick={add} className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-black/20">{added ? <><Check className="h-4 w-4" /> Added to bag</> : 'Add to bag'}</button>}
+              {isBespoke && <button onClick={() => startCommission(product.id)} className="h-13 w-full rounded-full bg-black px-5 py-4 text-sm font-bold text-white">Begin your commission</button>}
+              {isWaitlist && !waitlistSent && <div className="space-y-2 rounded-xl bg-[#f5f5f5] p-4"><p className="text-sm font-bold">Be first to know.</p><p className="text-xs text-black/55">This style is being prepared for its next release.</p><input value={waitlist.name} onChange={(event) => setWaitlist({ ...waitlist, name: event.target.value })} placeholder="Your name" className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-black" /><input type="email" value={waitlist.email} onChange={(event) => setWaitlist({ ...waitlist, email: event.target.value })} placeholder="Email address" className="h-10 w-full rounded-md border border-black/10 bg-white px-3 text-sm outline-none focus:border-black" /><button disabled={!waitlist.name || !waitlist.email} onClick={joinWaitlist} className="h-10 w-full rounded-full bg-black text-xs font-bold text-white disabled:bg-black/20">Join waitlist</button></div>}
+              {isWaitlist && waitlistSent && <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">You are on the list. We will get in touch when this pair is ready.</div>}
+              <a href={`https://wa.me/2348180474183?text=Hello%20Akpaka!%20I%20would%20like%20to%20ask%20about%20${encodeURIComponent(product.name)}.`} target="_blank" rel="noreferrer" className="block"><button className="h-12 w-full rounded-full border border-black/20 bg-white text-sm font-bold hover:border-black">Ask about this pair</button></a>
             </div>
 
-            {/* Rating */}
-            {avgRating && (
-              <div className="flex items-center gap-2 mb-6">
-                <div className="flex items-center gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-4 h-4 ${i < Math.round(parseFloat(avgRating)) ? 'fill-gold text-gold' : 'text-muted'}`} />
-                  ))}
-                </div>
-                <span className="text-sm text-muted-foreground">{avgRating} ({reviews.length} verified reviews)</span>
-              </div>
-            )}
-
-            {/* Price with reassurance */}
-            <div className="mb-8">
-              <p className="text-3xl font-serif font-bold text-charcoal">
-                ₦{product.price.toLocaleString()}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isReadyToWear ? 'Free shipping within Nigeria' : '30% deposit secures your commission. Balance upon completion.'}
-              </p>
+            <div className="mt-7 divide-y divide-black/10 border-y border-black/10">
+              <details open className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold">Details <ChevronDown className="h-4 w-4 transition group-open:rotate-180" /></summary><div className="pt-3 text-sm leading-relaxed text-black/60"><p>{product.baseLeather || 'Premium hand-selected leather'} · {product.soleType || 'Artisan-built sole'}</p>{product.craftingHours && <p className="mt-2">Crafted over {product.craftingHours} in our Port Harcourt atelier.</p>}</div></details>
+              <details className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold"><span className="flex items-center gap-2"><Truck className="h-4 w-4" /> Delivery & returns</span><ChevronDown className="h-4 w-4 transition group-open:rotate-180" /></summary><div className="pt-3 text-sm leading-relaxed text-black/60">Ready-to-wear pairs are dispatched in 3–5 business days. Made-to-order and bespoke pairs include a personal consultation before production. Unworn ready-to-wear shoes may be exchanged within 14 days.</div></details>
+              <details className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold"><span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> The Akpaka promise</span><ChevronDown className="h-4 w-4 transition group-open:rotate-180" /></summary><div className="pt-3 text-sm leading-relaxed text-black/60">Your pair is crafted and checked by our atelier. Ask us about care, fitting and resoling whenever you need us.</div></details>
             </div>
-
-            <p className="text-muted-foreground leading-[1.8] mb-8">{product.description}</p>
-
-            {/* Quick Specs — editorial spacing */}
-            <div className="grid grid-cols-2 gap-3 mb-8">
-              {product.baseLeather && (
-                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
-                  <Gem className="w-4 h-4 text-gold flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">{product.baseLeather}</span>
-                </div>
-              )}
-              {product.craftingHours && (
-                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
-                  <Clock className="w-4 h-4 text-gold flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">{product.craftingHours}</span>
-                </div>
-              )}
-              {product.leatherSource && (
-                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
-                  <MapPin className="w-4 h-4 text-gold flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">{product.leatherSource}</span>
-                </div>
-              )}
-              {product.soleType && (
-                <div className="flex items-center gap-2.5 p-3 bg-white rounded-lg">
-                  <Wrench className="w-4 h-4 text-gold flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">{product.soleType}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Trust Signals */}
-            <div className="grid grid-cols-3 gap-3 mb-8 p-4 bg-white rounded-lg border border-gold/10">
-              <div className="text-center">
-                <ShieldCheck className="w-5 h-5 text-gold mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground leading-tight">Authenticity<br />Certificate</p>
-              </div>
-              <div className="text-center">
-                <Wrench className="w-5 h-5 text-gold mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground leading-tight">Lifetime<br />Resoling</p>
-              </div>
-              <div className="text-center">
-                <FileText className="w-5 h-5 text-gold mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground leading-tight">14-Day<br />Returns</p>
-              </div>
-            </div>
-
-            {/* Size Selection */}
-            {!isBespokeOnly && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-semibold text-charcoal">Select Size (EU)</p>
-                  <button className="text-xs text-gold underline">Sizing Guide</button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {sizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`w-11 h-11 text-sm rounded-lg border-2 transition-all flex items-center justify-center ${
-                        selectedSize === size
-                          ? 'border-gold bg-gold/10 text-charcoal font-semibold'
-                          : 'border-border text-muted-foreground hover:border-gold/50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Primary Actions — clearly separated purchase models */}
-            <div className="space-y-3 mb-8">
-              {/* BESPOKE: Commission CTA */}
-              {(isBespokeOnly || product.productType === 'made-to-order') && (
-                <Button
-                  onClick={() => startCommission(product.id)}
-                  className="w-full bg-charcoal hover:bg-charcoal/90 text-gold font-semibold h-13 text-base tracking-wide"
-                >
-                  Begin Commission
-                </Button>
-              )}
-
-              {/* READY-TO-WEAR: Add to Bag */}
-              {(isReadyToWear && !isWaitlist) && (
-                <Button
-                  onClick={handleAddToCart}
-                  disabled={!selectedSize}
-                  className="w-full bg-gold hover:bg-gold-light text-charcoal font-semibold h-13 text-base tracking-wide disabled:opacity-50"
-                >
-                  {addedToCart ? '✓ Added to Bag' : 'Add to Bag'}
-                </Button>
-              )}
-
-              {/* WAITLIST */}
-              {isWaitlist && !waitlistSubmitted && (
-                <div className="space-y-3 p-4 bg-white rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-charcoal">This style is currently sold out</p>
-                  <p className="text-xs text-muted-foreground">Join the waitlist to be notified when it becomes available again.</p>
-                  <div className="flex gap-2">
-                    <Input placeholder="Your name" value={waitlistName} onChange={(e) => setWaitlistName(e.target.value)} className="flex-1 h-10 text-sm" />
-                    <Input placeholder="Email" type="email" value={waitlistEmail} onChange={(e) => setWaitlistEmail(e.target.value)} className="flex-1 h-10 text-sm" />
-                  </div>
-                  <Button onClick={handleWaitlist} disabled={!waitlistEmail || !waitlistName} className="w-full bg-charcoal text-gold h-10 disabled:opacity-50">
-                    Join Waitlist
-                  </Button>
-                </div>
-              )}
-              {isWaitlist && waitlistSubmitted && (
-                <div className="p-4 bg-green-50 rounded-lg text-center">
-                  <p className="text-sm font-semibold text-green-800">You are on the waitlist</p>
-                  <p className="text-xs text-green-600 mt-1">We will notify you when this style is available.</p>
-                </div>
-              )}
-
-              {/* Always available: WhatsApp inquiry */}
-              <a
-                href={`https://wa.me/2348180474183?text=Hello%20AkpakaNG!%20I%20am%20interested%20in%20the%20${encodeURIComponent(product.name)}.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Button variant="outline" className="w-full border-green-600 text-green-600 hover:bg-green-50 h-12">
-                  Inquire on WhatsApp
-                </Button>
-              </a>
-            </div>
-
-            {/* Crafting Timeline micro-copy */}
-            <div className="bg-charcoal/5 rounded-lg p-5 mb-8 space-y-3">
-              <p className="text-xs font-semibold text-charcoal tracking-wider uppercase">What Happens Next</p>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { step: '1', label: 'Consultation' },
-                  { step: '2', label: 'Crafting' },
-                  { step: '3', label: 'Quality Check' },
-                  { step: '4', label: 'Delivery' },
-                ].map((item) => (
-                  <div key={item.step} className="text-center">
-                    <div className="w-7 h-7 bg-gold/20 text-gold rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-1">{item.step}</div>
-                    <p className="text-[10px] text-muted-foreground leading-tight">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                {isReadyToWear ? 'Ships within 3-5 business days. Each pair comes with a certificate of authenticity and care kit.' : 'Bespoke commissions take 3-4 weeks. You will receive progress updates at every stage via WhatsApp.'}
-              </p>
-            </div>
-
-            {/* Artisan Quote */}
-            {product.artisanQuote && (
-              <div className="bg-charcoal text-white p-6 rounded-lg mb-8">
-                <p className="font-serif text-lg italic text-gold-light leading-relaxed">
-                  &ldquo;{product.artisanQuote}&rdquo;
-                </p>
-                <p className="text-sm text-white/50 mt-3">— Prince Sunday Achase, Master Artisan</p>
-              </div>
-            )}
-
-            {/* Tabs */}
-            <div className="border-b border-border mb-6">
-              <div className="flex gap-6">
-                {(['story', 'materials', 'reviews', 'care'] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-3 text-sm font-semibold capitalize transition-colors ${
-                      activeTab === tab ? 'text-charcoal border-b-2 border-gold' : 'text-muted-foreground hover:text-charcoal'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tab Content */}
-            <AnimatePresence mode="wait">
-              {activeTab === 'story' && (
-                <motion.div key="story" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                  <p className="text-muted-foreground leading-[1.8]">{product.description}</p>
-                  <p className="text-muted-foreground leading-[1.8]">
-                    Every Akpaka shoe begins with a conversation — understanding not just what you want to wear, 
-                    but how you want to feel. This design was born from Prince Achase&apos;s dedication to 
-                    pushing the boundaries of Nigerian luxury craftsmanship, combining time-honoured 
-                    techniques with contemporary aesthetics.
-                  </p>
-                </motion.div>
-              )}
-
-              {activeTab === 'materials' && (
-                <motion.div key="materials" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg">
-                    <div className="w-14 h-14 bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Gem className="w-7 h-7 text-amber-800" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-charcoal">{product.baseLeather || 'Premium Leather'}</h4>
-                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                        Sourced from {product.leatherSource || 'select international tanneries'}. 
-                        Our leather is vegetable-tanned for a minimum of 6 weeks, producing a hide 
-                        of extraordinary suppleness and depth of grain.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-4 bg-white rounded-lg">
-                    <div className="w-14 h-14 bg-stone-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Wrench className="w-7 h-7 text-stone-700" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-charcoal">{product.soleType || 'Premium Sole Construction'}</h4>
-                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                        Our soles are built to last decades. Goodyear welt construction allows for 
-                        easy resoling, while natural leather provides unmatched breathability and 
-                        a refined aesthetic.
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'reviews' && (
-                <motion.div key="reviews" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                  {reviews.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No reviews yet. Be the first to share your experience.</p>
-                  ) : (
-                    reviews.map((review) => (
-                      <div key={review.id} className="p-4 bg-white rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="flex gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-gold text-gold' : 'text-muted'}`} />
-                            ))}
-                          </div>
-                          <span className="font-semibold text-sm text-charcoal">{review.authorName}</span>
-                          {review.verified && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
-                              <BadgeCheck className="w-3 h-3" /> Verified
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
-                      </div>
-                    ))
-                  )}
-                </motion.div>
-              )}
-
-              {activeTab === 'care' && (
-                <motion.div key="care" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
-                  <div>
-                    <h4 className="font-serif text-base font-semibold text-charcoal mb-2">After-Sales Care</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Every Akpaka shoe comes with a lifetime resoling guarantee. Our Goodyear welt 
-                      construction means your shoes can be resoled indefinitely, preserving the upper 
-                      while refreshing the foundation. Resoling service is available at our Port Harcourt 
-                      atelier or by post.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-base font-semibold text-charcoal mb-2">Returns Policy</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Ready-to-wear shoes may be returned within 14 days of delivery in unworn condition 
-                      with original packaging. Bespoke commissions are non-refundable once production has 
-                      begun, but we offer complimentary adjustments to ensure perfect fit.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-base font-semibold text-charcoal mb-2">Sizing Guarantee</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Not sure about your size? We provide a complimentary sizing consultation via WhatsApp 
-                      video call. If your shoes do not fit perfectly, we offer one free size exchange on 
-                      ready-to-wear pairs within 14 days.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+          </aside>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function Input({ placeholder, value, onChange, className, type, disabled }: {
-  placeholder: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; className?: string; type?: string; disabled?: boolean;
-}) {
-  return (
-    <input
-      type={type || 'text'}
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className || ''}`}
-    />
+        <section className="mt-16 border-t border-black/10 pt-12 lg:mt-24"><div className="grid gap-10 md:grid-cols-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/45">Material</p><p className="mt-3 text-lg font-semibold">{product.baseLeather || 'Premium leather'}</p><p className="mt-2 text-sm leading-relaxed text-black/60">Sourced for character, worked by hand and finished to develop a patina that gets better with wear.</p></div><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/45">Construction</p><p className="mt-3 text-lg font-semibold">{product.soleType || 'Made to endure'}</p><p className="mt-2 text-sm leading-relaxed text-black/60">A considered foundation that balances long wear, comfort and a clean profile.</p></div><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/45">Atelier note</p><p className="mt-3 text-lg font-semibold">Built in Port Harcourt.</p><p className="mt-2 text-sm leading-relaxed text-black/60">{product.artisanQuote ? `“${product.artisanQuote}”` : 'Made with the focus, patience and point of view that defines every Akpaka pair.'}</p></div></div></section>
+
+        {reviews.length > 0 && <section className="mt-16 border-t border-black/10 pt-10"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/45">From the people who wear Akpaka</p><h2 className="mt-2 text-3xl font-bold tracking-[-0.05em]">Reviews</h2><div className="mt-7 grid gap-4 md:grid-cols-2">{reviews.map((review, index) => <article key={review.id || index} className="rounded-xl bg-[#f5f5f5] p-5"><div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, star) => <Star key={star} className={`h-3.5 w-3.5 ${star < review.rating ? 'fill-black' : 'fill-black/20 text-black/20'}`} />)}</div><p className="mt-3 text-sm leading-relaxed">{review.comment || 'An exceptional pair — the finish and fit feel considered in every detail.'}</p><p className="mt-4 text-xs font-bold text-black/55">{review.authorName || 'Verified Akpaka customer'}</p></article>)}</div></section>}
+      </div>
+    </main>
   );
 }

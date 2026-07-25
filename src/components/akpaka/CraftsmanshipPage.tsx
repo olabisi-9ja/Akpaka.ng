@@ -11,37 +11,37 @@ const steps = [
     icon: Scissors,
     title: 'Leather Selection',
     description: 'Every great shoe begins with great leather. We source our hides from the finest tanneries in Italy, France, and Spain — selecting each piece for grain quality, suppleness, and character. Our leather is vegetable-tanned for a minimum of six weeks, producing a hide of extraordinary depth.',
-    image: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80',
+    image: '/images/editorial/media__1784681124579.jpg',
   },
   {
     icon: Palette,
     title: 'Pattern Cutting',
     description: 'The last is the soul of the shoe. Our bespoke lasts are carved to your exact foot measurements, ensuring a fit that is uniquely yours. Pattern cutting transforms the design into precise leather components — a process that demands years of experience and steady hands.',
-    image: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80',
+    image: '/images/editorial/media__1784681124579.jpg',
   },
   {
     icon: Hammer,
     title: 'Hand Stitching & Lasting',
     description: 'The upper is hand-stitched with waxed linen thread, then pulled over the last and secured — a process called lasting. For our Goodyear welted shoes, a strip of leather is stitched to the upper and insole, creating a durable and resoleable construction that can last decades.',
-    image: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80',
+    image: '/images/editorial/media__1784681124579.jpg',
   },
   {
     icon: Eye,
     title: 'Patina Finishing',
     description: 'This is where Akpaka shoes become truly extraordinary. Our signature patina is built in layers — aniline dyes, cremes, and hand-burning techniques that transform raw crust leather into a living, breathing work of art. No two patinas are ever identical.',
-    image: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80',
+    image: '/images/editorial/media__1784681124579.jpg',
   },
   {
     icon: ShieldCheck,
     title: 'Quality Inspection',
     description: 'Before any shoe leaves our workshop, it undergoes a rigorous quality inspection. Every stitch is checked, every edge is examined, and the finish is scrutinized under multiple lighting conditions. Only shoes that meet our exacting standards earn the Akpaka name.',
-    image: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80',
+    image: '/images/editorial/media__1784681124579.jpg',
   },
   {
     icon: Package,
     title: 'Packaging & Delivery',
     description: 'Your shoes are presented in a handcrafted Akpaka box, accompanied by a dust bag, cedar shoe trees, and a care guide. Whether delivered locally in Port Harcourt or shipped internationally, every pair arrives as a luxury experience.',
-    image: 'https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=800&q=80',
+    image: '/images/editorial/media__1784681124579.jpg',
   },
 ];
 
@@ -53,7 +53,7 @@ export function CraftsmanshipPage() {
       {/* Hero */}
       <section className="relative h-[50vh] sm:h-[60vh] overflow-hidden mb-20">
         <img
-          src="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=1600&q=80"
+          src="/images/editorial/media__1784681124579.jpg"
           alt="AkpakaNG Workshop"
           className="w-full h-full object-cover"
         />
