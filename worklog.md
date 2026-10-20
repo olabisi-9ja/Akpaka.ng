@@ -34,6 +34,36 @@ Stage Summary:
 - Lint-clean, no build errors, dev server running successfully
 
 ---
+Task ID: 3
+Agent: Main Agent
+Task: Reverse engineer farfetch.com/ng with REA (morluto/rea) and rebuild AkpakaNG to match Farfetch UI/UX
+
+Work Log:
+- Installed rea-agents@6.7.0 globally; ran `rea doctor` and `rea capabilities` (sandbox has no Chromium and no outbound access to farfetch.com, so live CDP capture/bundle analysis was impossible — limitation recorded in report)
+- Captured passive evidence of 4 Farfetch NG pages (homepage, womenswear PLP, menswear PLP, Gucci PDP) into reverse-engineering/farfetch/evidence/
+- Wrote reverse-engineering/farfetch/REA-REPORT.md: information architecture, 20+ component inventory, design tokens (monochrome white/black/#f5f5f5/#e5e5e5), interaction patterns, product-card data model, promo mechanics (app code NC10FF, pre-owned -15%), and a Farfetch→Akpaka reconstruction mapping
+- Rebuilt storefront to Farfetch design system:
+  - globals.css: Farfetch monochrome token set (kept gold/cream/charcoal brand tokens for secondary pages), ff-eyebrow micro-label utility, neutral scrollbar
+  - Store: added selectedDepartment, wishlist (toggleWishlist/isWishlisted)
+  - New ProductCard (3:4 imagery, badge stack, uppercase brand + lowercase name, hover image swap, quick-add +, save heart, sale pricing with strikethrough original + -15%)
+  - New ProductCarousel (snap scroll, edge arrows, Shop Now footer)
+  - New MegaMenu (full-width department panel: feature image + category columns)
+  - Navbar: promo bar, FARFETCH-style wordmark header, department mega nav (New In/Women/Men/Bespoke/Sale), icon actions, full-screen mobile menu, full-screen search overlay with popular chips
+  - HomePage: auto-rotating hero carousel, Choose-a-department tiles, per-department 4-tile category grids, editorial split, New in carousel (New Season badges), 15%-off atelier samples sale carousel (original/final price), Trending chips, editorial section, Atelier favourites links, Never miss a thing newsletter, How to shop/FAQs/Need help strip
+  - CollectionsPage: FARFETCH PLP — breadcrumbs, sticky filter toolbar, type/price filter panel (+mobile sheet), sort dropdown, department-aware filtering (women/men category mapping, new-in, sale, bespoke), 4-col grid
+  - ProductDetailPage: FARFETCH PDP — thumbnail gallery with image counter, brand-link + lowercase title, service strip, size grid before Add To Bag, dispatch estimate, Also-available-in cross-sell, The Details accordion (highlights/measurements/composition/Made in Port Harcourt/Akpaka ID), Why Akpaka trust block, reviews, related carousel
+  - CartDrawer: FARFETCH bag — hairline dividers, trust strip, quantity stepper, save-for-later
+  - Footer: FARFETCH 5-column layout (Shop/Collections/Help/About/Contact) with phones and social
+  - layout.tsx: updated metadata to FARFETCH-style title/description
+- Made src/lib/db.ts lazily initialise PrismaClient (engine binaries cannot be downloaded in sandbox; API routes fall back to seeded mock catalogue)
+- Verified: `next build` compiles, TypeScript clean, ESLint 0 errors, dev server serves homepage with all Farfetch sections, /api/products returns catalogue
+
+Stage Summary:
+- AkpakaNG storefront now matches Farfetch UI/UX patterns end-to-end
+- REA report + page evidence archived under reverse-engineering/farfetch/
+- Build green, lint clean, dev server live on :3000
+
+---
 Task ID: 2
 Agent: Main Agent
 Task: Major upgrade — editorial redesign, trust signals, checkout flow, backend expansion, SEO

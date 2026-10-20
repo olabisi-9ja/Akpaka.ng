@@ -1,39 +1,42 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Heart, LayoutGrid, List, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { ProductCard, ProductCardProduct } from '@/components/akpaka/ProductCard';
 
-interface Product {
-  id: string;
-  name: string;
+interface Product extends ProductCardProduct {
   description: string;
-  price: number;
-  images: string;
-  category: string;
-  productType: string;
-  stockStatus: string;
-  baseLeather?: string | null;
-  craftingHours?: string | null;
   collectionId?: string | null;
-  reviews?: { rating: number }[];
+  collection?: { name: string } | null;
 }
 
-const categories = ['All', 'Oxford', 'Loafer', 'Boot', 'Wedding'];
-const styles = [
-  { label: 'Oxfords', image: '/images/editorial/media__1784681124466.jpg', category: 'Oxford' },
-  { label: 'Loafers', image: '/images/editorial/media__1784681124508.jpg', category: 'Loafer' },
-  { label: 'Boots', image: '/images/akpaka-hero-campaign.jpg', category: 'Boot' },
-];
+const categories = ['Oxford', 'Loafer', 'Boot', 'Wedding'];
+
+const departmentMeta: Record<string, { title: string; note: string; departments: string[] }> = {
+  women: { title: 'Womenswear', note: 'Handcrafted for every arrival.', departments: ['women'] },
+  men: { title: 'Menswear', note: 'Classic silhouettes, built to last.', departments: ['men'] },
+  bespoke: { title: 'Bespoke', note: 'Made to measure, entirely yours.', departments: ['bespoke'] },
+  'new-in': { title: 'New In', note: 'Fresh from the bench, handpicked daily.', departments: [] },
+  sale: { title: 'Sale', note: 'Atelier samples, now 15% off.', departments: [] },
+};
+
+const departmentCategories: Record<string, string[]> = {
+  women: ['wedding', 'loafer'],
+  men: ['oxford', 'boot'],
+};
+
+type SortKey = 'featured' | 'newest' | 'low' | 'high';
 
 export function CollectionsPage() {
-  const { selectProduct, searchQuery, setSearchQuery } = useAppStore();
+  const { selectProduct, searchQuery, setSearchQuery, selectedDepartment, setSelectedDepartment, selectCollection, selectedCollection } = useAppStore();
   const [products, setProducts] = useState<Product[]>([]);
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeTypes, setActiveTypes] = useState<string[]>([]);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [sort, setSort] = useState<SortKey>('featured');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sort, setSort] = useState<'featured' | 'low' | 'high'>('featured');
-  const [saved, setSaved] = useState<string[]>([]);
 
   useEffect(() => {
     fetch('/api/products')
@@ -42,101 +45,242 @@ export function CollectionsPage() {
       .catch(() => setProducts([]));
   }, []);
 
+  const saleMode = selectedDepartment === 'sale';
+  const meta = selectedDepartment ? departmentMeta[selectedDepartment] : null;
+
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const result = products.filter((product) => {
-      const categoryMatch = activeCategory === 'All' || product.category.toLowerCase() === activeCategory.toLowerCase();
-      const searchMatch = !query || `${product.name} ${product.category} ${product.baseLeather || ''}`.toLowerCase().includes(query);
-      return categoryMatch && searchMatch;
+    let result = products.filter((product) => {
+      if (selectedDepartment && selectedDepartment !== 'new-in' && selectedDepartment !== 'sale') {
+        const allowed = departmentCategories[selectedDepartment] ?? [];
+        if (!allowed.includes(product.category.toLowerCase())) return false;
+      }
+      if (selectedDepartment === 'new-in' && !product.featured) return false;
+      if (selectedDepartment === 'bespoke' && product.productType !== 'bespoke-only' && product.productType !== 'made-to-order') return false;
+      if (selectedCollection && product.collection?.name !== selectedCollection && product.collectionId !== selectedCollection) return false;
+      if (activeCategory && product.category.toLowerCase() !== activeCategory.toLowerCase()) return false;
+      if (activeTypes.length && !activeTypes.includes(product.productType)) return false;
+      if (minPrice !== null && product.price < minPrice) return false;
+      if (maxPrice !== null && product.price > maxPrice) return false;
+      if (query && !`${product.name} ${product.category} ${product.baseLeather || ''}`.toLowerCase().includes(query)) return false;
+      return true;
     });
 
-    if (sort === 'low') return [...result].sort((a, b) => a.price - b.price);
-    if (sort === 'high') return [...result].sort((a, b) => b.price - a.price);
+    if (sort === 'low') result = [...result].sort((a, b) => a.price - b.price);
+    else if (sort === 'high') result = [...result].sort((a, b) => b.price - a.price);
+    else if (sort === 'newest') result = [...result].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     return result;
-  }, [activeCategory, products, searchQuery, sort]);
+  }, [products, selectedDepartment, selectedCollection, activeCategory, activeTypes, minPrice, maxPrice, searchQuery, sort]);
 
-  const selectCategory = (category: string) => {
+  const selectCategory = (category: string | null) => {
     setActiveCategory(category);
     setSearchQuery('');
   };
 
+  const toggleType = (type: string) => {
+    setActiveTypes((current) => (current.includes(type) ? current.filter((item) => item !== type) : [...current, type]));
+  };
+
+  const effectivePrice = (product: Product) => (saleMode ? Math.round((product.price / 0.85) / 100) * 100 : product.price);
+
   return (
-    <main className="min-h-screen bg-white pb-20 pt-[118px] text-[#111] lg:pt-[132px]">
-      <section className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-10">
-        <div className="flex flex-col gap-6 border-b border-black/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.19em] text-black/45">Akpaka footwear</p>
-            <h1 className="mt-2 text-4xl font-bold tracking-[-0.06em] sm:text-5xl">Shoes for every arrival.</h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-black/60">Handcrafted leather footwear, designed in Port Harcourt and finished for the places you are headed next.</p>
-          </div>
-          <p className="text-sm text-black/55">{products.length} styles</p>
+    <main className="min-h-screen bg-white pb-20 pt-[92px] text-black lg:pt-[92px]">
+      <div className="mx-auto max-w-[1680px] px-4 sm:px-6 lg:px-10">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-1.5 py-5 text-xs text-black/55">
+          <button onClick={() => { setSelectedDepartment(null); selectCollection(null); }} className="hover:text-black">Home</button>
+          <ChevronRight className="h-3 w-3" />
+          <button onClick={() => { setSelectedDepartment(null); selectCollection(null); }} className="hover:text-black">Shoes</button>
+          {meta && <><ChevronRight className="h-3 w-3" /><span className="text-black">{meta.title}</span></>}
+          {activeCategory && <><ChevronRight className="h-3 w-3" /><span className="text-black">{activeCategory}s</span></>}
+        </nav>
+
+        {/* Heading */}
+        <div className="flex flex-col gap-4 border-b border-black/10 pb-8">
+          <h1 className="text-4xl font-bold tracking-[-0.05em] sm:text-5xl">{meta ? meta.title : 'All shoes'}</h1>
+          <p className="max-w-xl text-sm leading-relaxed text-black/60">{meta ? meta.note : 'Handcrafted leather footwear, designed in Port Harcourt and finished for the places you are headed next.'}</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 py-7 sm:gap-4 lg:max-w-4xl">
-          {styles.map((style) => (
-            <button key={style.label} onClick={() => selectCategory(style.category)} className="group text-left">
-              <div className="aspect-[4/3] overflow-hidden bg-[#f5f5f5]"><img src={style.image} alt={style.label} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /></div>
-              <p className="mt-3 text-sm font-bold">Shop {style.label}</p>
+        {/* Toolbar */}
+        <div className="sticky top-[92px] z-20 -mx-4 flex items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 sm:mx-0 sm:px-0 lg:top-[92px]">
+          <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto pr-4">
+            {['All', ...categories].map((category) => (
+              <button
+                key={category}
+                onClick={() => selectCategory(category === 'All' ? null : category)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                  (category === 'All' && !activeCategory) || activeCategory === category
+                    ? 'border-black bg-black text-white'
+                    : 'border-black/20 hover:border-black'
+                }`}
+              >
+                {category === 'All' ? 'All shoes' : `${category}s`}
+              </button>
+            ))}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-semibold ${filtersOpen ? 'border-black bg-black text-white' : 'border-black/20'}`}>
+              <SlidersHorizontal className="h-4 w-4" /> Filters
             </button>
-          ))}
-        </div>
-
-        <div className="sticky top-[68px] z-20 -mx-4 border-y border-black/10 bg-white px-4 py-3 sm:mx-0 sm:px-0 lg:top-[100px]">
-          <div className="flex items-center justify-between gap-3">
-            <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto pr-4">
-              {categories.map((category) => (
-                <button key={category} onClick={() => selectCategory(category)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeCategory === category ? 'bg-black text-white' : 'bg-[#f5f5f5] hover:bg-black/10'}`}>{category === 'All' ? 'All shoes' : category}</button>
-              ))}
+            <div className="relative">
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as SortKey)}
+                className="appearance-none rounded-full border border-black/20 bg-white py-2 pl-4 pr-9 text-[13px] font-medium outline-none"
+                aria-label="Sort products"
+              >
+                <option value="featured">Featured</option>
+                <option value="newest">Newest</option>
+                <option value="low">Price: low to high</option>
+                <option value="high">Price: high to low</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             </div>
-            <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${filtersOpen ? 'border-black bg-black text-white' : 'border-black/20'}`}><SlidersHorizontal className="h-4 w-4" /> Filters</button>
           </div>
         </div>
 
+        {/* Filter panel */}
         {filtersOpen && (
-          <section className="border-b border-black/10 py-5">
-            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-              <div><p className="text-sm font-bold">Refine your selection</p><p className="mt-1 text-xs text-black/55">Choose a price order or search by material and style.</p></div>
-              <div className="flex flex-wrap gap-2"><button onClick={() => setSort('featured')} className={`rounded-full px-4 py-2 text-sm ${sort === 'featured' ? 'bg-black text-white' : 'bg-[#f5f5f5]'}`}>Featured</button><button onClick={() => setSort('low')} className={`rounded-full px-4 py-2 text-sm ${sort === 'low' ? 'bg-black text-white' : 'bg-[#f5f5f5]'}`}>Price: low to high</button><button onClick={() => setSort('high')} className={`rounded-full px-4 py-2 text-sm ${sort === 'high' ? 'bg-black text-white' : 'bg-[#f5f5f5]'}`}>Price: high to low</button></div>
+          <section className="border-b border-black/10 py-6">
+            <div className="grid gap-8 sm:grid-cols-3">
+              <div>
+                <p className="ff-eyebrow">Type</p>
+                <div className="mt-3 space-y-2">
+                  {[
+                    ['ready-to-wear', 'Ready to wear'],
+                    ['made-to-order', 'Made to order'],
+                    ['bespoke-only', 'Bespoke'],
+                  ].map(([value, label]) => (
+                    <label key={value} className="flex cursor-pointer items-center gap-2 text-sm text-black/75">
+                      <input type="checkbox" checked={activeTypes.includes(value)} onChange={() => toggleType(value)} className="h-4 w-4 accent-black" />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="ff-eyebrow">Price</p>
+                <div className="mt-3 space-y-2">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-black/75">
+                    <input type="radio" name="price" checked={minPrice === null && maxPrice === null} onChange={() => { setMinPrice(null); setMaxPrice(null); }} className="accent-black" />
+                    All prices
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-black/75">
+                    <input type="radio" name="price" checked={minPrice === null && maxPrice === 80000} onChange={() => { setMinPrice(null); setMaxPrice(80000); }} className="accent-black" />
+                    Under ₦80,000
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-black/75">
+                    <input type="radio" name="price" checked={minPrice === 80000 && maxPrice === 100000} onChange={() => { setMinPrice(80000); setMaxPrice(100000); }} className="accent-black" />
+                    ₦80,000 – ₦100,000
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-black/75">
+                    <input type="radio" name="price" checked={minPrice === 100000 && maxPrice === null} onChange={() => { setMinPrice(100000); setMaxPrice(null); }} className="accent-black" />
+                    Over ₦100,000
+                  </label>
+                </div>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={() => { setActiveTypes([]); setMinPrice(null); setMaxPrice(null); setActiveCategory(null); }}
+                  className="text-[13px] font-bold underline underline-offset-4 hover:text-black/60"
+                >
+                  Clear all filters
+                </button>
+              </div>
             </div>
           </section>
         )}
 
+        {/* Result count */}
         <div className="flex items-center justify-between py-6">
-          <p className="text-sm font-medium">{filteredProducts.length} results {searchQuery && <span className="font-normal text-black/55">for “{searchQuery}”</span>}</p>
-          <div className="hidden items-center gap-1 sm:flex"><button aria-label="Grid view" onClick={() => setViewMode('grid')} className={`grid h-9 w-9 place-items-center rounded-full ${viewMode === 'grid' ? 'bg-black text-white' : 'hover:bg-[#f5f5f5]'}`}><LayoutGrid className="h-4 w-4" /></button><button aria-label="List view" onClick={() => setViewMode('list')} className={`grid h-9 w-9 place-items-center rounded-full ${viewMode === 'list' ? 'bg-black text-white' : 'hover:bg-[#f5f5f5]'}`}><List className="h-4 w-4" /></button></div>
+          <p className="text-sm font-medium">
+            {filteredProducts.length} result{filteredProducts.length === 1 ? '' : 's'}
+            {searchQuery && <span className="font-normal text-black/55"> for “{searchQuery}”</span>}
+          </p>
         </div>
 
+        {/* Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="grid min-h-[360px] place-items-center border-y border-black/10 text-center"><div><p className="text-2xl font-bold tracking-[-0.04em]">Nothing in this cut yet.</p><p className="mt-2 text-sm text-black/55">Try another style or clear your search.</p><button onClick={() => { setSearchQuery(''); setActiveCategory('All'); }} className="mt-5 rounded-full bg-black px-5 py-3 text-xs font-bold text-white">Show all shoes</button></div></div>
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4">
-            {filteredProducts.map((product) => <ProductCard key={product.id} product={product} saved={saved.includes(product.id)} onSave={() => setSaved((items) => items.includes(product.id) ? items.filter((id) => id !== product.id) : [...items, product.id])} onSelect={() => selectProduct(product.id)} />)}
+          <div className="grid min-h-[360px] place-items-center border-y border-black/10 text-center">
+            <div>
+              <p className="text-2xl font-bold tracking-[-0.04em]">Nothing in this cut yet.</p>
+              <p className="mt-2 text-sm text-black/55">Try another style or clear your search.</p>
+              <button
+                onClick={() => { setSearchQuery(''); setActiveCategory(null); setActiveTypes([]); setMinPrice(null); setMaxPrice(null); setSelectedDepartment(null); selectCollection(null); }}
+                className="mt-5 rounded-full bg-black px-5 py-3 text-xs font-bold text-white"
+              >
+                Show all shoes
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="border-t border-black/10">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4">
             {filteredProducts.map((product) => (
-              <button key={product.id} onClick={() => selectProduct(product.id)} className="flex w-full gap-5 border-b border-black/10 py-4 text-left transition-colors hover:bg-[#f8f8f8] sm:gap-8 sm:p-5">
-                <img src={product.images.split(',')[0]} alt={product.name} className="h-28 w-28 bg-[#f5f5f5] object-cover mix-blend-multiply sm:h-36 sm:w-40" />
-                <span className="flex min-w-0 flex-1 flex-col justify-center"><span className="text-[10px] font-bold uppercase tracking-wider text-black/45">{product.category} · {product.stockStatus === 'in-stock' ? 'Ready to wear' : 'Made to order'}</span><span className="mt-2 text-lg font-bold tracking-[-0.035em] sm:text-xl">{product.name}</span><span className="mt-1 line-clamp-2 max-w-xl text-sm text-black/55">{product.description}</span><span className="mt-3 text-sm font-medium">₦{product.price.toLocaleString()}</span></span>
-              </button>
+              <ProductCard
+                key={product.id}
+                product={product}
+                badge={saleMode ? 'Special Offer' : product.featured ? 'New Season' : undefined}
+                originalPrice={saleMode ? effectivePrice(product) : undefined}
+                discount={saleMode ? '-15%' : undefined}
+              />
             ))}
           </div>
         )}
-      </section>
-    </main>
-  );
-}
 
-function ProductCard({ product, saved, onSave, onSelect }: { product: Product; saved: boolean; onSave: () => void; onSelect: () => void }) {
-  const label = product.stockStatus === 'in-stock' ? 'Ready to wear' : product.stockStatus === 'bespoke-only' ? 'Bespoke' : product.stockStatus === 'waitlist' ? 'Coming back soon' : 'Made to order';
-  return (
-    <article onClick={onSelect} className="group cursor-pointer text-left">
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#f5f5f5]">
-        <img src={product.images.split(',')[0]} alt={product.name} className="h-full w-full object-cover mix-blend-multiply transition duration-500 group-hover:scale-[1.04]" />
-        <span className="absolute bottom-3 left-3 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide">{label}</span>
-        <button onClick={(event) => { event.stopPropagation(); onSave(); }} aria-label={`Save ${product.name}`} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/95"><Heart className={`h-[18px] w-[18px] ${saved ? 'fill-[#8d3d27] text-[#8d3d27]' : ''}`} /></button>
+        {/* Load more (progressive reveal) */}
+        {filteredProducts.length > 8 && (
+          <div className="mt-12 text-center">
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="rounded-full border border-black px-6 py-3 text-xs font-bold transition-colors hover:bg-black hover:text-white">
+              Back to top
+            </button>
+          </div>
+        )}
       </div>
-      <div className="mt-3 flex gap-2"><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold sm:text-base">{product.name}</h2><p className="mt-1 truncate text-xs text-black/55">{product.baseLeather || 'Hand-finished leather'}</p></div><p className="whitespace-nowrap text-sm">₦{product.price.toLocaleString()}</p></div>
-    </article>
+
+      {/* Mobile filter sheet */}
+      {filtersOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+          <button aria-label="Close filters" onClick={() => setFiltersOpen(false)} className="absolute inset-0 w-full bg-black/45" />
+          <div className="absolute inset-x-0 bottom-0 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <p className="text-lg font-bold">Filters</p>
+              <button aria-label="Close filters" onClick={() => setFiltersOpen(false)} className="grid h-9 w-9 place-items-center rounded-full hover:bg-black/5">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="ff-eyebrow">Type</p>
+            <div className="mt-3 space-y-2">
+              {[['ready-to-wear', 'Ready to wear'], ['made-to-order', 'Made to order'], ['bespoke-only', 'Bespoke']].map(([value, label]) => (
+                <label key={value} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input type="checkbox" checked={activeTypes.includes(value)} onChange={() => toggleType(value)} className="h-4 w-4 accent-black" />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <p className="ff-eyebrow mt-6">Price</p>
+            <div className="mt-3 space-y-2">
+              {([
+                ['all', 'All prices', null, null],
+                ['under', 'Under ₦80,000', null, 80000],
+                ['mid', '₦80,000 – ₦100,000', 80000, 100000],
+                ['over', 'Over ₦100,000', 100000, null],
+              ] as [string, string, number | null, number | null][]).map(([key, label, min, max]) => (
+                <label key={key} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="price-mobile"
+                    checked={minPrice === min && maxPrice === max}
+                    onChange={() => { setMinPrice(min); setMaxPrice(max); }}
+                    className="accent-black"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <button onClick={() => setFiltersOpen(false)} className="mt-8 w-full rounded-full bg-black py-3.5 text-xs font-bold text-white">Show {filteredProducts.length} results</button>
+          </div>
+        </div>
+      )}
+    </main>
   );
 }

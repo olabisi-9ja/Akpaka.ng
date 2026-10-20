@@ -25,6 +25,8 @@ interface AppState {
   commissionProductId: string | null;
   mobileMenuOpen: boolean;
   searchQuery: string;
+  selectedDepartment: string | null;
+  wishlist: string[];
 
   // Analytics events buffer
   analyticsEvents: { event: string; data: Record<string, unknown>; ts: number }[];
@@ -43,6 +45,9 @@ interface AppState {
   startCommission: (productId: string | null) => void;
   setMobileMenuOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
+  setSelectedDepartment: (department: string | null) => void;
+  toggleWishlist: (productId: string) => void;
+  isWishlisted: (productId: string) => boolean;
   getCartTotal: () => number;
   getCartCount: () => number;
   trackEvent: (event: string, data?: Record<string, unknown>) => void;
@@ -58,6 +63,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   commissionProductId: null,
   mobileMenuOpen: false,
   searchQuery: '',
+  selectedDepartment: null,
+  wishlist: [],
   analyticsEvents: [],
 
   setView: (view) => {
@@ -116,6 +123,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
   setSearchQuery: (query) => set({ searchQuery: query }),
+  setSelectedDepartment: (department) => set({ selectedDepartment: department }),
+  toggleWishlist: (productId) =>
+    set((state) => ({
+      wishlist: state.wishlist.includes(productId)
+        ? state.wishlist.filter((id) => id !== productId)
+        : [...state.wishlist, productId],
+    })),
+  isWishlisted: (productId) => get().wishlist.includes(productId),
   getCartTotal: () => get().cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
   getCartCount: () => get().cart.reduce((sum, item) => sum + item.quantity, 0),
   trackEvent: (event, data = {}) =>
